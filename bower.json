@@ -1,0 +1,20 @@
+{
+  "name": "Twitch multistream",
+  "version": "0.0.0",
+  "authors": [
+    ""
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "semantic-ui-popup": "~2.1.4",
+    "jquery": "~1.11.2",
+    "bootstrap": "~3.3.5"
+  }
+}

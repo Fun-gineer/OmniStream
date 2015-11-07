@@ -1,0 +1,16 @@
+ONLY NEED TO CHANGE THE RECENT STREAMS SAVE CONFIGURATION VARIABLE. EVERYTHING ELSE IS DONE FOR YOU ALREADY.
+
+use window.history.pushState(null, null, push); to push selected streams from the list to the url
+
+the $('#favStreams').click only uses the FavoritesString global, might be a good idea to just load this on startup. Check to see if the localStorage favoritesString is set, if not  then run the function to set it (refreshFavoritesString)
+should add a basic funtion to run in the startup function sequence that does the above line...
+
+add a cookie to track when refreshFavoritesString has been run, and use it to run the function again every few days or so...
+
+add a viewers count popup
+
+add a selected streams tabbar with names and delete buttons
+
+when switching streams in 1-stream mode, use pauseVideo and playVideo instead of rerendering (not too much faster, just an afterthought)
+
+maybe fix setResizableStreamList()?

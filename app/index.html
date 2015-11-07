@@ -1,0 +1,187 @@
+<!-- <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"> -->
+<!-- <!DOCTYPE html> -->
+<html>
+<title>StreamStreamStream</title>
+ <!-- <base href="http://www.streamstreamstream.com/index.html#" target="_top"> -->
+<head>
+
+  <meta http-equiv="x-ua-compatible" content="IE=edge,chrome=1"> <!-- doesnt do anything yet -->
+  <meta name="keywords" content="twitch, multistream, twitch multistream, gaming, esports">
+  <meta name="description" content="Watch multiple Twitch streams at once">
+  <meta name="author" content="">
+  <meta http-equiv="pragma" content="no-cache">           <!-- HTML/1.0 -->
+  <meta http-equiv="Cache-control" content="NO-CACHE">    <!-- HTML/1.1   CHANGE THIS WHEN FINISHED-->
+  <meta http-equiv="window-target" content="_top"> <!--makes sure that others are not able to show your page in a frame on their own website -->
+  <meta http-equiv="refresh" content="60000">      <!--time in seconds before page refresh -->
+  <meta http-equiv="default-style" content="main">  <!--default stylesheet is defaultCSS -->
+  <meta http-equiv="pics-label" content="streams">
+  <meta name="viewport" content="width=device-width, height=device-height, user-scalable=yes, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">   <!-- scales the page for the device width... useful for mobile -->
+        <!-- need to set device-width manually for media queries to work, or else browsers just use a default  (static) pixel size for the viewport size -->
+        <!-- target-densitydpi=device-dpi     was using this option for uniform css-pixel device-pixel scaling for testing, can also use high-dpi, medium-dpi, low-dpi or literal value -->
+        <!-- @media  screen and (-o-min-device-pixel-ratio: 3/2)     css to use for dpi based media queries. Android uses irrationals (eg 1.5) -->
+
+  <!-- <meta http-equiv="refresh" content="30; ,URL=http://www.metatags.info/pages/register.php"> REDIRECTS YOU TO ANOTHER SITE AFTER 30 SEC-->
+  <meta http-equiv="expires" content="mon, 27 sep 2016 14:30:00 GMT">
+  <meta http-equiv="Set-Cookie" content="USER=9983373; path=/; expires=Thursday, 20-May-16 00:15:00 GMT">
+  <meta charset="UTF-8">   <!--should put this on bottom since the page starts rendering when it sees this tag -->
+
+
+
+    <!--CDN -->
+	    <script src="https://code.jquery.com/jquery-1.11.2.min.js"></script>
+
+	    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+	          <!-- Optional theme -->
+	    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+	    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.1.4/components/popup.min.css">
+    <!-- /CDN -->
+
+
+	<!-- LOCAL -->
+		    <!-- styles needed by jScrollPane -->
+		<link type="text/css" href="styles/jScrollPane.css" rel="stylesheet" media="all" />
+	    <link rel="stylesheet" href="styles/main.css" title="defaultCSS" />
+	    <link rel="stylesheet" href="styles/colResizable.css" />
+	    <link rel="stylesheet" href="styles/responsive.css" media="screen and (max-width: 1300px)">
+    
+	    <!-- bower:css -->
+    		<!-- <link rel="stylesheet" href="bower_components/semantic-ui-popup/popup.css" /> -->
+    	<!-- endbower -->
+    
+    <!-- /LOCAL -->
+
+
+<!-- prevent flashing unloaded styles -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prefixfree/1.0.7/prefixfree.min.js"></script>
+  <script type="text/javascript" src="https://cdn.rawgit.com/LeaVerou/prefixfree/gh-pages/plugins/prefixfree.jquery.js"></script>
+
+
+</head>
+<body>
+
+<div class="entire">
+  <span class="colList">
+      <div id="listBar">
+        <!-- <div class="ui icon button" width="20px" height="20px" style="z-index:10;" data-content="Add users to your feed">
+          <i class="add icon"></i>
+        </div> -->
+        <span class="listButton"><i id="topStreams" class="fa fa-arrow-up activeButton"></i></span>
+        <span class="listButton"><i id="favStreams" class="fa fa-heart"></i></span>
+        <span class="listButton"><i id="recStreams" class="fa fa-history"></i></span>
+        <span class="listButton btn-group">
+          <a class=" dropdown-toggle" data-toggle="dropdown" href="#">    <!-- btn btn-primary    classes removed -->
+            <span id="filStreams" class="fa fa-filter"></span>
+          </a>
+            <ul class="dropdown-menu" id="filterList">
+              <span><b>Filter by:</b></span>
+              <li class="divider"></li>
+                <li class="toggleableFilter"><i class="fa fa-check fa-fw black i"></i><span>streamer<input type="field" id="streamer" name="streamer" value=""></span></li>
+                <li class="toggleableFilter"><i class="fa fa-check fa-fw black i"></i><span>game    <input type="field" id="game" name="game" value=""></span></li>
+                <!-- <li class="toggleableFilter"><i class="fa fa-ban fa-fw black i"></i></li> -->
+                <li class="divider"></li>
+                <!-- <li><i class="i"></i></li> -->
+            </ul>
+        </span>
+        <span class="listButton btn-group">
+          <a class=" dropdown-toggle" data-toggle="dropdown" href="#">
+            <span id="setStreams" class="fa fa-cogs"></span>
+          </a>
+            <ul class="dropdown-menu" id="Settings">
+              <span><b>Settings:</b></span>
+              <li class="divider"></li>
+                <li class="toggleableSetting">
+                  <span>List size:
+                    <select id="listSize">
+                      <option value="6.5">6.5%</option>
+                      <option value="8">8%</option>
+                      <option value="10">10%</option>
+                      <option value="12.5">12.5%</option>
+                      <option value="15">15%</option>
+                      <option value="20">20%</option>
+                      <option value="30">30%</option>
+                      <option value="50">50%</option>
+                      <option value="75">75%</option>
+                    </select>
+                  </span>
+                </li>
+                <li class="toggleableSetting">
+                  <span>Chat size:
+                    <select id="chatSize">
+                      <option value="20">20%</option>
+                      <option value="24">24%</option>
+                      <option value="28">28%</option>
+                      <option value="32">32%</option>
+                      <option value="35">35%</option>
+                      <option value="40">40%</option>
+                      <option value="50">50%</option>
+                    </select>
+                  </span>
+                </li>
+                <li class="toggleableSetting">
+                  <span>Refresh list every:
+                    <select id="refreshPeriod">
+                      <option value="30">30</option>
+                      <option value="60">60</option>
+                      <option value="120">120</option>
+                      <option value="Never">Never</option>
+                    </select>
+                    minutes
+                  </span>
+                </li>
+                <li class="toggleableSetting"><span>Twitch username:<input type="field" id="Username" name="Username" value=""></span></li>
+                <li class="toggleableSetting"><i class="fa fa-check fa-fw black i"></i><span>Don't save layout on my device</span></li>
+                <!-- <li class="toggleableFilter"><i class="fa fa-ban fa-fw black i"></i></li> -->
+                <li class="divider"></li>
+                <!-- <li><i class="i"></i></li> -->
+              </ul>
+        </span>
+        <span> | </span>
+        <span class="listButton"><i id="Help" class="fa fa-question"></i></span>
+      </div>
+
+
+      <div style="z-index:1;">
+        <ul id="list"></ul>
+      </div>
+
+
+ </span>
+  <table id="sample" style="width:100%; height:100% !important; z-index:0;" border="0" cellpadding="0" cellspacing="0">
+      <tr style="width:100%; position: relative;">
+
+      </td><td class="colStreams" style="width: 70%; position: relative;">
+
+      </td><td class="colChat" style="width: 30%; height: 100%; position: absolute; top:0; right:0;">
+
+          </td>
+      </tr>
+   </table>
+
+ </div>
+
+
+
+      <!--CDN-->
+       <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+       <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.1.4/components/popup.min.js"></script>
+       <script src="http://ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js"></script>
+       <script src="http://www.bacubacu.com/colresizable/js/colResizable-1.5.min.js"></script>
+       <script type="text/javascript" src="http://jscrollpane.kelvinluck.com/script/jquery.jscrollpane.min.js"></script>
+      <!--end CDN-->
+
+     <!-- bower:js -->
+ 	   <!-- <script src="bower_components/jquery/dist/jquery.js"></script>
+ 		    <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script> -->
+     <!-- endbower -->
+
+	  <!-- build:js scripts/Script.js -->
+	     <script src="Script.js"></script>
+	  <!-- endbuild -->
+
+	 <!-- LIVE RELOAD -->
+ 	 <!-- <script src="http://localhost:35729/livereload.js"></script> -->
+
+ </body>
+ </html>

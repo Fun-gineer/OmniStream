@@ -1,0 +1,348 @@
+* {
+  // height:100%;
+  // width:100%;
+  margin: 0;
+  padding: 0;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    -ms-box-sizing: border-box;
+    -o-box-sizing: border-box;
+    box-sizing: border-box;
+	/* scrollbar-face-color: #b46868; */
+}
+
+html,body {
+  height: 100vh;
+  width: 100vw;
+  cursor: default;
+	/*overflow-x:hidden;
+	overflow-y:hidden;*/
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.entire {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  max-height: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  background: black;
+  font-family: Trebuchet MS, Tahoma, Verdana, Arial, sans-serif;
+  font-size: 13px;
+  background-color: black;
+	/*background-image:url(../img/bg.png);*/
+  background-repeat: repeat-x;
+  text-align: center;
+}
+
+
+
+
+
+
+
+  // SCROLL BAR
+
+.scroll-pane
+{
+	width: 100%;
+	height: 200px;
+	overflow: auto;
+}
+.horizontal-only
+{
+	height: auto;
+	max-height: 200px;
+}
+.jspCap
+{
+	display: block;
+	background: #eeeef4;
+}
+.jspVerticalBar .jspCap
+{
+	height: 20px;
+}
+.jspHorizontalBar .jspCap
+{
+	width: 50px;
+	height: 100%;
+}
+
+
+
+/*HAD TO DO THESE TWO !IMPORTANT'S TO HACK THE SHOCKWAVE FLASH EMBEDDING'S NATIVE VISIBILITY:VISIBLE. ELSE LOADING COG WOULDNT SHOW */
+#loadingDivShow * {
+  visibility: hidden;
+}
+
+#loadingDivShowFinal * {
+  visibility: visible;
+}
+
+span {
+  display: inline-block;
+}
+
+.listButton{
+  z-index:500;
+}
+
+
+
+
+
+
+
+
+
+
+/* WEBKIT*/
+
+::-webkit-scrollbar {
+  width: 0.9em;
+}
+
+::-webkit-scrollbar-track {
+  background-color: black;
+  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 50, 0.2);
+  outline: 1px solid slategrey;
+}
+
+::-webkit-scrollbar-button {
+  background-color: black;
+}
+
+::-webkit-scrollbar-corner {
+  background-color: rgba(0,0,0,0.3);
+}
+
+::-webkit-scrollbar-button:horizontal:increment {
+  background-image: url(http://www.polyvore.com/cgi/img-thing?.out=jpg&size=l&tid=9754652);
+}
+
+::-webkit-scrollbar-button:horizontal:decrement {
+  background-image: url(http://www.polyvore.com/cgi/img-thing?.out=jpg&size=l&tid=9754652);
+}
+
+::-webkit-scrollbar-button:vertical:increment {
+  background-image: url(http://www.polyvore.com/cgi/img-thing?.out=jpg&size=l&tid=9754652);
+}
+
+::-webkit-scrollbar-button:vertical:decrement {
+  background-image: url(http://www.polyvore.com/cgi/img-thing?.out=jpg&size=l&tid=9754652);
+}
+
+
+
+
+
+
+
+
+
+
+
+	/*FONT AWESOME CONTENT */
+
+.dropdown-menu {
+  width: 20vw;
+  height: 20vh;
+  z-index: 6;
+  overflow: hidden;
+	/*pointer-events: none;*/
+}
+/*.dropdown-menu li *{
+	pointer-events: auto;
+}*/
+
+.fa {
+  color: white;
+}
+
+.fa:hover {
+  cursor: pointer;
+}
+
+.fa-cog {
+  position: absolute;
+	/*width: 10%;*/
+  height: auto;
+  top: 50%;
+  left: 50%;
+	/*text-align: center;*/
+	/*top:200;
+	left:0;*/
+  z-index: 2;
+}
+
+.fa-cog-text {
+  position: absolute;
+  height: auto;
+  top: 5%;
+  left: 5%;
+	/*text-align: center;*/
+  z-index: -1;
+}
+
+.listStreamName {
+  font-size: 100%;
+  color: white;
+}
+
+a {
+  text-decoration: none;
+  cursor: pointer;
+  border-bottom: 1px dotted #888;
+  font-style: italic;
+  color: #222
+}
+
+ul {
+  position: absolute;
+  top: 2%;
+  height: 90vh;
+  list-style-type: none;
+  margin-left: 0px;
+  margin-top: 0px;
+  width: 100%;
+  overflow-x: scroll;
+  overflow-y: scroll;
+  z-index: 2;
+}
+
+li {
+  width: 100%;
+}
+
+img {
+  -ms-interpolation-mode: bicubic;
+  image-rendering: optimizeQuality;
+}
+
+.activeButton {
+  color: green;
+}
+
+#recStreams:hover {
+  color: #9933cc;
+}
+
+#favStreams:hover {
+  color: red;
+}
+
+#filStreams:hover {
+  color: orange;
+}
+
+#topStreams:hover {
+  color: #33b5e5;
+}
+
+#setStreams:hover {
+  color: grey;
+}
+
+.colList {
+  position: absolute;
+  top: 0;
+  left: 0;
+	/*display:inline;*/
+  float: left;
+  height: 100vh;
+  max-height: 100%;
+  white-space: nowrap;
+  width: 10vw;
+	/*overflow-y:hidden;
+  overflow-x:hidden;*/
+}
+
+.colStreams {
+  /*order: 2;*/
+  display: block;
+  height: 100%;
+  min-height: 100%;
+  max-height: 100%;
+}
+
+.colChat {
+  /*order: 3;*/
+  display: inline;
+  float: right;
+  min-height: 100%;
+  max-height: 100%;
+	/*min-width: 20%;
+	max-width: 40%;*/
+}
+
+.streamPic {
+  /*max-width:100%;
+  max-height:100%;*/
+  /*min-width: 100%;
+  height: auto;*/
+  /*min-height: 100%;
+  width: auto;*/
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.collapse {
+  cursor: select;
+}
+
+#listBar {
+  position: absolute;
+  float: left;
+  width: 100%;
+  height: 2vh;
+  top: 0;
+  left: 0;
+  z-index: 5;
+}
+
+#list {
+  height: 100vh;
+}
+
+.black {
+  color: black;
+  z-index: 2
+}
+
+.activeFilter {
+  color: red;
+}
+
+
+  // black outline around the white text
+.strokeme{
+    /*color: black;
+    text-shadow:
+    1px 1px 0 #000,
+    -1px 1px 0 #000,
+    1px -1px 0 #000,
+    1px 1px 0 #000;*/
+
+    text-shadow: #000 0px 0px 2px,   #000 0px 0px 2px,   #000 0px 0px 2px,
+             #000 0px 0px 2px,   #000 0px 0px 2px,   #000 0px 0px 2px;
+    -webkit-font-smoothing: antialiased;
+}
+
+  // fits the overlayed text into the list img div
+.wordwrap {
+   white-space: pre-wrap;      /* CSS3 */
+   white-space: -moz-pre-wrap; /* Firefox */
+   white-space: -pre-wrap;     /* Opera <7 */
+   white-space: -o-pre-wrap;   /* Opera 7 */
+   word-wrap: break-word;      /* IE */
+}
