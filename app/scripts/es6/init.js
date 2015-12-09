@@ -1,5 +1,33 @@
 function init(){
 
+// //REDIRECT FOR THE HELP BUTTON
+//       $('#Help').click(function(){
+//         window.open('http://www.streamstreamstream.com/help.txt');
+//       });
+
+
+//CHECK FLASH INSTALLED
+// var Flash_Installed = ((typeof navigator.plugins !== "undefined" && typeof navigator.plugins["Shockwave Flash"] === "object") || (window.ActiveXObject && (new ActiveXObject("ShockwaveFlash.ShockwaveFlash")) !== false));
+      window.Flash_Installed = (swfobject.hasFlashPlayerVersion("1")) ? true : false;
+
+
+//CHECK FOR MOBILE... AN (UNSTABLE) ALTERNATIVE TO MEDIA QUERIES
+//matchMedia is relatively new. Theres a modernizr equivalent and a polyfill on github
+      window.isMobile = window.matchMedia("(max-width: 1300px)").matches;
+
+      if (window.isMobile){
+  			$('.fa').addClass('fa-2x');
+  		}
+      //mq.matches as a test (not a function)
+
+//ENLARGE MENU ICONS FOR TOUCHSCREENS
+  		window.MobileOrTablet= mobile.mobileOrTablet();
+
+
+//CHECK FOR COOKIES
+      window.CookiesEnabled = cookies.areCookiesEnabled();
+
+//CHECK FOR LOCALSTORAGE
       window.storageEnabled = (function(){
         var test = 'test';
         try {
@@ -11,41 +39,13 @@ function init(){
         }
       })();
 
-      // var Flash_Installed = ((typeof navigator.plugins !== "undefined" && typeof navigator.plugins["Shockwave Flash"] === "object") || (window.ActiveXObject && (new ActiveXObject("ShockwaveFlash.ShockwaveFlash")) !== false));
-      window.Flash_Installed = (swfobject.hasFlashPlayerVersion("1")) ? true : false;
-
-
-
-  //matchMedia is relatively new. Theres a modernizr equivalent and a polyfill on github
-      window.isMobile = window.matchMedia("(max-width: 1300px)").matches;
-      //mq.matches as a test (not a function)
-
-
-        //ENLARGE MENU ICONS FOR TOUCHSCREENS
-  		window.MobileOrTablet= mobile.mobileOrTablet();
-  		if (MobileOrTablet){
-  			$('.fa').addClass('fa-2x');
-  		}
-
-
-        //SET RECENT STREAMS
-      window.RecentStreams = [];
-      	if(storageEnabled){
-      			if (!(localStorage.RecentStreams)) localStorage.RecentStreams = '';
-      			RecentStreams = localStorage.RecentStreams.split(",");   //contains recent streams that were watched
-      			if (RecentStreams[0] === '') RecentStreams = [];
-      	}
-      	else RecentStreams = [];
-
-
-
-          //GET COOKIES OR URL PARAMS TO SET THE INITIAL STREAMS BEING WATCHED. GET USERNAME
+//GET COOKIES OR URL PARAMS TO SET THE INITIAL STREAMS BEING WATCHED. GET USERNAME
       window.UrlParams = window.parseURL();
-      cookies.CookiesEnabled = cookies.areCookiesEnabled();
+//GET USERNAME
       window.Username = cookies.getCookie('username') || '';
 
 
-    //CROSS BROWSER SCROLL PANE CUSTOMISATION
+//CROSS BROWSER SCROLL PANE CUSTOMISATION
     	$('.scroll-pane').jScrollPane({
     		showArrows: true,
     		arrowScrollOnHover: true,
@@ -61,8 +61,22 @@ function init(){
       // pane2api.reinitialise();
 
 
+//TOOLTIP INIT FOR BOOTSTRAP
+      $('[data-toggle="tooltip"]').tooltip();
 
-    	//filter and settings windows won't close when you click the buttons
+//SET RECENT STREAMS VARIABLE
+      window.RecentStreams = [];
+      	if(storageEnabled){
+      			if (!(localStorage.RecentStreams)) localStorage.RecentStreams = '';
+      			RecentStreams = localStorage.RecentStreams.split(",");   //contains recent streams that were watched
+      			if (RecentStreams[0] === '') RecentStreams = [];
+      	}
+      	else RecentStreams = [];
+
+
+
+//CLICK PROPAGATION
+    //filter and settings windows won't close when you click the buttons
     $(".toggleableFilter").click(function(e) {
     		 e.stopPropagation();
     });

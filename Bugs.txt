@@ -1,3 +1,9 @@
+find magnify / resize listener and reset the collapselist and collapsechat buttons in that callback
+
+Make all the fire icon settings work, pretty up the buttons
+
+Make the multistream button work
+
 ONLY NEED TO CHANGE THE RECENT STREAMS SAVE CONFIGURATION VARIABLE. EVERYTHING ELSE IS DONE FOR YOU ALREADY.
 
 use window.history.pushState(null, null, push); to push selected streams from the list to the url
@@ -10,7 +16,5 @@ add a cookie to track when refreshFavoritesString has been run, and use it to ru
 add a viewers count popup
 
 add a selected streams tabbar with names and delete buttons
-
-when switching streams in 1-stream mode, use pauseVideo and playVideo instead of rerendering (not too much faster, just an afterthought)
 
 maybe fix setResizableStreamList()?

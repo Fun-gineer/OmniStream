@@ -1,7 +1,7 @@
 //SEARCH FOR GAMES (FROM A PREMADE LIST)
-// https://api.twitch.tv/kraken/streams?game=Ultra%20Street%20Fighter%20IV
+// https://api.twitch.tv/kraken/streams?game=
 //SEARCH FOR CHANNELS FROM A PREMADE LIST
-// https://api.twitch.tv/kraken/streams?channel=KatGunn
+// https://api.twitch.tv/kraken/streams?channel=
 
 // https://api.twitch.tv/kraken/search/channels?q=Lineage%20II:%20The%20Chaotic%20Chronicle
 // https://api.twitch.tv/kraken/search/games?q=Lineage&type=suggest&live
@@ -22,7 +22,6 @@ $(function(){
 
 	// document.domain=document.domain;	//iframe->document port matching. The Twitch API sets the domain correctly, so no problems there
 
-	// window.classFun = require('./classy.js');
 	(require('./streamUtils.js'))();
 	window.cookies= new (require('./cookies.js'));
 	window.mobile= new (require('./mobile.js'));
@@ -30,64 +29,17 @@ $(function(){
 	window.parseURL= require('./parseURL.js');
 	window.renderStreams= require('./renderStreams.js');
 	window.cResizer= new(require('./columnResizer.js'));
-
-	//init script
+//init script
 	(require('./init.js'))();
-	// alert(window.isMobile);
 
-	window.addToFavStreams= function(value, refreshing){
-		if(value!=''  && value!=null && typeof(value)!='undefined') SortedFavoritesString = value;
 
-		console.log('Sorted favorites string:');
-		console.log(SortedFavoritesString);
 
-		list.NoListLockout=false;
-				if(refreshing) {
-					list.flushNumListedStreams();
-					list.NumListedStreamsEnd=list.CNumListedStreamsEnd;
-					list.FavIndexL=list.CNumListedStreamsStart;
-					list.FavIndexH=list.CNumListedStreamsEnd;
-				}
 
-					//ONLY USE A SUBSET OF Favorites TO QUERY
-					//HAVE TO CHOP SOME ELEMENTS OFF OF FavoritesString. SO TURN INTO AN ARRAY, SLICE IT, THEN STRINGIFY IT AGAIN
-			var res = SortedFavoritesString.split(',');
-	console.log('making requests in loop to add to favorites');
-
-			var length = 0;
-			var lc = 0;
-			loop();
-
-			function loop(){
-
-				var qString = res.slice(list.FavIndexL,list.FavIndexH).toString();
-	console.log('qString');
-	console.log(qString);
-
-							if (lc == 4 || qString=='' || qString==null) {list.NoListLockout=true; return;}
-							lc++;
-
-				$.getJSON('https://api.twitch.tv/kraken/streams?channel='+qString+'&callback=?')
-				.done(function(favorites){
-					// Favorites.push(favorites);		//SET THE GLOBAL FAVORITES TO THE RESULT
-					console.log('addToFavStreams favorites:');
-					console.log(favorites);
-					  list.NumListedStreamsEnd+=favorites.streams.length;
-						list.listLoader(favorites,refreshing,false,list.NumListedStreamsEnd);
-						list.NumListedStreamsStart+=favorites.streams.length;
-						list.FavIndexL+=list.CNumListedStreamsEnd;
-						list.FavIndexH+=list.CNumListedStreamsEnd;
-						refreshing = false;
-						length += favorites.streams.length;
-						if (length < 1)  loop();
-						else {lc=4; list.NoListLockout=true;}
-				})
-			}
-
+	window.renderStreamsSortList=function(){
+		for(var i=0;i<4;i++){
+			$('#Stream'+i).text(WatchingStreams[i]);
+		}
 	}
-
-
-
 
 
 
@@ -119,8 +71,8 @@ $(function(){
 								})
 								//ON ERROR
 					.fail(function(){
-						console.log('ATTEMPT TO GET USER\'S FOLLOWED STREAMS FAILED!' );
-						deferred1.resolve('');
+								console.log('ATTEMPT TO GET USER\'S FOLLOWED STREAMS FAILED!' );
+								deferred1.resolve('');
 					});
 
 				}
@@ -148,6 +100,7 @@ window.CSaveRecentStreams = true;
 
 
   //INITIALIZE
+window.lw=500;
 window.NumStreams=1;  //number of streams being displayed, NOT the number of streams in the watching-list
 window.SelectedStream=0;   //the stream that is "active" to be changed on a list click
 window.WatchingStreams=[]; //the streams being watched
@@ -158,8 +111,6 @@ window.FirstTimeRenderingStreams = true;
 window.ListIsHidden = false;
 window.ChatIsHidden = false;
 window.SingleStreamSelectorOffset=0;
-window.URL='';       //without appended streams or index.html#
-window.UrlParams=[];
 window.ChangingSingleStreams=false;    //used in the renderStreams function's .Init listener on the flash players to correctly show the channel number on SelectedStream change
 window.Favorites=[];
 window.FavoritesFirstClick=true;
@@ -179,8 +130,19 @@ window.$selectedStreamPopup = window.$streams;    //meaningless; purely for init
 window.$filterList = $('#filterList');
 
 
-  //RUN
-cookies.getStreamCookies();        //brings back the streams stored in the cookies session and updates the URL to reflect that (but only if a custom URL is not set)
+	//RUN
+
+//CHOOSE BETWEEN LOADING FROM COOKIES OR USING URL PARAMS (TRIES URL PARAMS FIRST)
+			window.URL='';       //without appended streams or index.html#
+			UrlParams= parseURL();
+if(typeof UrlParams[0] == "undefined" && CookiesEnabled){
+  console.log('No URL params. loading cookies');
+  cookies.getStreamCookies();    //brings back the streams stored in the cookies session and updates the URL to reflect that (but only if a custom URL is not set)
+}
+else{
+	console.log('Using URL to populate streams');
+	WatchingStreams = fillStreamsWithURLParams(UrlParams,WatchingStreams);
+};
 // alert(window.history.length);
 
 showStreamsLoadScreen();
@@ -191,31 +153,39 @@ addToRecentStreams();   //sets recent streams to the streams you are initially w
 list.populateList(list.DefaultRequestURL,true);
 list.controlListScroll();
 
-(require('./keyListenersSetup.js'))();
+window.renderStreamsSortList();
+
 (require('./streamListButtonListeners.js'))();
 (require('./closeListener.js'))();  //creates cookies to store layout info for getLayoutCookies and getStreamCookies
 cResizer.setResizableStreamList();
+(require('./keyListenersSetup.js'))();
 
+$( window ).resize(function() {
+	var $collapseList = $(".collapseList");
+	var $collapseChat = $('.collapseChat');
+	$collapseList.css({top: 0, left: $colList.width(), position:'absolute', 'z-index': 2});
+	$collapseChat.css({top: 0, right: 0, position:'absolute', 'z-index': 2});
+});
 
 });
 
 
 //THIS IS THE MASTER THAT REFRESHES ALL THE RESIZERS AT ONCE
-// function ResetAllDragColumns(){
-//   ResetOuterColumnDrag();
-//   ResetStreamColumnDrag();
-// }
+	// function ResetAllDragColumns(){
+	//   ResetOuterColumnDrag();
+	//   ResetStreamColumnDrag();
+	// }
 
 
-    //WINDOW.RESIZEBY() (ONLY WORKS ON WINDOWS YOU MADE) NEED THIS TO UNBREAK THE CHAT. THE CHAT DOESNT FIT ITSELF WHEN YOU FIRST EMBED IT.
-// function DoBrowserResizeCycle(){
-//   var height = $(window).height();
-//   var width = $(window).width();
-//   alert($(window).width());
-//   window.resizeBy(-500, 0);
-//   alert($(window).width());
-//   // window.resizeTo(width, height);
-// }
+//WINDOW.RESIZEBY() (ONLY WORKS ON WINDOWS YOU MADE) NEED THIS TO UNBREAK THE CHAT. THE CHAT DOESNT FIT ITSELF WHEN YOU FIRST EMBED IT.
+	// function DoBrowserResizeCycle(){
+	//   var height = $(window).height();
+	//   var width = $(window).width();
+	//   alert($(window).width());
+	//   window.resizeBy(-500, 0);
+	//   alert($(window).width());
+	//   // window.resizeTo(width, height);
+	// }
 
 
 // this.$OuterDiv = $(document.createElement('div'))     //$('<div></div>') also works instead of document.create....
@@ -226,9 +196,6 @@ cResizer.setResizableStreamList();
 //     );
 //
 //
-
-// player.pauseVideo();
-// player.mute();
 
 
 // $(document).ready(function() {
@@ -244,27 +211,24 @@ cResizer.setResizableStreamList();
 //     });
 // });
 
-    //WRAP FUNCTION
-// $( ".inner" ).wrap(function() {
-//   return "<div class='" + $( this ).text() + "'></div>";
-// });
+//WRAP FUNCTION
+	// $( ".inner" ).wrap(function() {
+	//   return "<div class='" + $( this ).text() + "'></div>";
+	// });
 
-    //GETTING % WIDTHS OF ELEMENTS (here its class of box)
-// var width = $('.box').clone().appendTo('body').wrap('<div style="display: none"></div>').css('width');
-// alert(width);
+//GETTING % WIDTHS OF ELEMENTS (here its class of box)
+	// var width = $('.box').clone().appendTo('body').wrap('<div style="display: none"></div>').css('width');
+	// alert(width);
 
-     //CSS
-//$chat.css({"width": "30%", "height": "100%"});
-
-     //WINDOW.LOCATION
-// window.location.href returns the href (URL) of the current page
-// window.location.hostname returns the domain name of the web host
-// window.location.pathname returns the path and filename of the current page
-// window.location.protocol returns the web protocol used (http:// or https://)
-// window.location.assign loads a new document
+//WINDOW.LOCATION
+	// window.location.href returns the href (URL) of the current page
+	// window.location.hostname returns the domain name of the web host
+	// window.location.pathname returns the path and filename of the current page
+	// window.location.protocol returns the web protocol used (http:// or https://)
+	// window.location.assign loads a new document
 
 
-	//MONITOR EVENTS
+//MONITOR EVENTS
 //type in console:
 	// monitorEvents($0)		//$0 is just the last element in the DOM, can replace with whatever you want
 	// unmonitorEvents($0)

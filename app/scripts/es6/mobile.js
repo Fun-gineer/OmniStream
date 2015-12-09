@@ -1,6 +1,15 @@
 class detectMobile{
 
-	//check for on mobile
+//check for mobile based on CSS PIXEL SIZE
+		detectmobBySize() {
+		   if(window.innerWidth <= 800 && window.innerHeight <= 600) {
+		     return true;
+		   } else {
+		     return false;
+		   }
+		}
+
+//check for on mobile USING A REALLY BIG RegExp
 	mobile() {
 	  var check = false;
 	  (function(a){
@@ -9,7 +18,7 @@ class detectMobile{
 		 })(navigator.userAgent||navigator.vendor||window.opera);
 	  return check;
 	}
-	//check for mobile or tablet
+//check for mobile or tablet USING A REALLY BIG RegExp
 	mobileOrTablet() {
 	  var check = false;
 	  (function(a){
@@ -20,15 +29,6 @@ class detectMobile{
 	}
 
 
-
-	//check for mobile based on size
-	detectmobBySize() {
-	   if(window.innerWidth <= 800 && window.innerHeight <= 600) {
-	     return true;
-	   } else {
-	     return false;
-	   }
-	}
 	//add |android|ipad|playbook|silk to include these as well (not in there by default)
 	//another way to detect mobile (not super reliable)
 	detectmobByNavigator() {

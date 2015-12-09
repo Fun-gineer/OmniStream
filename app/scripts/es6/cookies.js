@@ -34,7 +34,7 @@ class cookies{
 
 
 
-	//COOKIES - SET LAYOUT
+//SET LAYOUT
 	getLayoutCookies() {
 
 	      //SIZING WITH COOKIES AND SIZING RESET STUFF - USES PIXELS, SO NOT REALLY FUTURE-PROOF
@@ -62,10 +62,9 @@ class cookies{
 
 
 
-	//COOKIES - BRING BACK PREVIOUS STREAMS (BUT ONLY IF URL PARAMS ARE NOT SET)
+//BRING BACK PREVIOUS STREAMS (BUT ONLY IF URL PARAMS ARE NOT SET)
 	getStreamCookies(){
-	  if(typeof window.UrlParams[0] == 'undefined' && this.CookiesEnabled){
-	    console.log('No URL params. loading cookies');
+
 	    var push='index.html#';
 	    for (var i=0;i<4;i++){
 	      var cookie = window.cookies.getCookie('stream'+i);
@@ -74,14 +73,15 @@ class cookies{
 	        window.WatchingStreams[i]=cookie;
 	        console.log('stream '+i+'- '+cookie);
 	      }
-	      else {window.history.pushState(null, null, push); break;}
+	      else {
+					window.history.pushState(null, null, push);
+					break;
+				}
 	    }
+			var length = WatchingStreams.length || 0;
+	    window.NumStreams=(length==0?1 :length==1?1 :length==2?2 :length==3?4: length==4?4 :4);
 	    console.log('cookies used to populate streams. URL: ' + URL);
-	  }
-	  else{
-			console.log('Using URL to populate streams');
-			window.fillStreamsFromURL();
-		};
+
 	}
 
 

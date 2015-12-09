@@ -1,2 +1,1716 @@
-"use strict";function _classCallCheck(a,b){if(!(a instanceof b))throw new TypeError("Cannot call a class as a function")}var _createClass=function(){function a(a,b){for(var c=0;c<b.length;c++){var d=b[c];d.enumerable=d.enumerable||!1,d.configurable=!0,"value"in d&&(d.writable=!0),Object.defineProperty(a,d.key,d)}}return function(b,c,d){return c&&a(b.prototype,c),d&&a(b,d),b}}();!function a(b,c,d){function e(g,h){if(!c[g]){if(!b[g]){var i="function"==typeof require&&require;if(!h&&i)return i(g,!0);if(f)return f(g,!0);var j=new Error("Cannot find module '"+g+"'");throw j.code="MODULE_NOT_FOUND",j}var k=c[g]={exports:{}};b[g][0].call(k.exports,function(a){var c=b[g][1][a];return e(c?c:a)},k,k.exports,a,b,c,d)}return c[g].exports}for(var f="function"==typeof require&&require,g=0;g<d.length;g++)e(d[g]);return e}({1:[function(a,b,c){$(function(){a("./streamUtils.js")(),window.cookies=new(a("./cookies.js")),window.mobile=new(a("./mobile.js")),window.list=new(a("./listManager.js")),window.parseURL=a("./parseURL.js"),window.renderStreams=a("./renderStreams.js"),window.cResizer=new(a("./columnResizer.js")),a("./init.js")(),window.addToFavStreams=function(a,b){function c(){var a=d.slice(list.FavIndexL,list.FavIndexH).toString();return console.log("qString"),console.log(a),4==f||""==a||null==a?void(list.NoListLockout=!0):(f++,void $.getJSON("https://api.twitch.tv/kraken/streams?channel="+a+"&callback=?").done(function(a){console.log("addToFavStreams favorites:"),console.log(a),list.NumListedStreamsEnd+=a.streams.length,list.listLoader(a,b,!1,list.NumListedStreamsEnd),list.NumListedStreamsStart+=a.streams.length,list.FavIndexL+=list.CNumListedStreamsEnd,list.FavIndexH+=list.CNumListedStreamsEnd,b=!1,e+=a.streams.length,1>e?c():(f=4,list.NoListLockout=!0)}))}""!=a&&null!=a&&"undefined"!=typeof a&&(SortedFavoritesString=a),console.log("Sorted favorites string:"),console.log(SortedFavoritesString),list.NoListLockout=!1,b&&(list.flushNumListedStreams(),list.NumListedStreamsEnd=list.CNumListedStreamsEnd,list.FavIndexL=list.CNumListedStreamsStart,list.FavIndexH=list.CNumListedStreamsEnd);var d=SortedFavoritesString.split(",");console.log("making requests in loop to add to favorites");var e=0,f=0;c()},window.refreshFavoritesString=function(a){storageEnabled&&cookies.CookiesEnabled?a||"undefined"==typeof localStorage.FavoritesString||null==localStorage.FavoritesString||null==cookies.getCookie("FRefresh")||""==cookies.getCookie("FRefresh")?(console.log("refreshed FavoritesString"),$.getJSON("https://api.twitch.tv/kraken/users/"+Username+"/follows/channels?limit="+CFavStreamsSearchLimit+"&offset=0&callback=?").done(function(a){var b=[];a.follows.forEach(function(a){b.push(a.channel.name)}),localStorage.setItem("FavoritesString",b.toString()),cookies.setCookie("FRefresh",!0,3),deferred1.resolve(localStorage.FavoritesString)}).fail(function(){console.log("ATTEMPT TO GET USER'S FOLLOWED STREAMS FAILED!"),deferred1.resolve("")})):deferred1.resolve(localStorage.FavoritesString):(console.log("Favorites wont work - you need to enable cookies and local storage. You may not have native local storage support in your browser"),$("#favStreams").off("click"),deferred1.resolve(""))},window.CFavStreamsSearchLimit=400,window.CHideGame=!1,window.CHideDesc=!0,window.CSaveRecentStreams=!0,window.NumStreams=1,window.SelectedStream=0,window.WatchingStreams=[],window.DivideStreams="horizontal",window.ActiveChat=0,window.addListTimer=null,window.FirstTimeRenderingStreams=!0,window.ListIsHidden=!1,window.ChatIsHidden=!1,window.SingleStreamSelectorOffset=0,window.URL="",window.UrlParams=[],window.ChangingSingleStreams=!1,window.Favorites=[],window.FavoritesFirstClick=!0,window.FavoritesString="",window.SortedFavoritesString="",window.deferred1=$.Deferred(),window.deferred2=$.Deferred(),window.$list=$("#list"),window.$colList=$(".colList"),window.$streams=$(".colStreams"),window.$chat=$(".colChat"),window.$selectedStreamPopup=window.$streams,window.$filterList=$("#filterList"),cookies.getStreamCookies(),showStreamsLoadScreen(),cookies.getLayoutCookies(),cResizer.setResizableColumns("sample",!0,cResizer.ResetStreamColumnDrag),addToRecentStreams(),list.populateList(list.DefaultRequestURL,!0),list.controlListScroll(),a("./keyListenersSetup.js")(),a("./streamListButtonListeners.js")(),a("./closeListener.js")(),cResizer.setResizableStreamList()})},{"./closeListener.js":2,"./columnResizer.js":3,"./cookies.js":4,"./init.js":5,"./keyListenersSetup.js":6,"./listManager.js":7,"./mobile.js":8,"./parseURL.js":9,"./renderStreams.js":10,"./streamListButtonListeners.js":11,"./streamUtils.js":12}],2:[function(a,b,c){function d(){window.onbeforeunload=function(a){cookies.setCookie("listw",$colList.width(),90),cookies.setCookie("chatw",$chat.width(),90),cookies.setCookie("streamsw",$streams.width(),90),cookies.setCookie("ListRefreshTimeMinutes",list.CListRefreshTimeMinutes,90),window.CSaveRecentStreams?localStorage.RecentStreams=window.RecentStreams.toString():localStorage.RecentStreams="";for(var b=0;4>b;b++){if(""==window.WatchingStreams[b]||null==window.WatchingStreams[b]){for(;4>b;)cookies.setCookie("stream"+b,"",90),++b;break}cookies.setCookie("stream"+b,window.WatchingStreams[b],90)}return null}}b.exports=d},{}],3:[function(a,b,c){var d=function(){function a(){_classCallCheck(this,a)}return _createClass(a,[{key:"setResizableColumns",value:function(a,b,c){b?$("#"+a).colResizable({liveDrag:!0,gripInnerHtml:"<div class='grip'></div>",draggingClass:"dragging",partialRefresh:"true",onResize:function(){c()}}):$("#"+a).colResizable({liveDrag:!0,gripInnerHtml:"<div class='grip'></div>",draggingClass:"dragging",partialRefresh:"true"})}},{key:"ResetOuterColumnDrag",value:function(){$("#sample").colResizable({disable:!0}),this.setResizableColumns("sample",!0,this.ResetStreamColumnDrag)}},{key:"ResetStreamColumnDrag",value:function(){window.NumStreams>1&&$("#streamTable").colResizable({disable:!0}),this.setResizableColumns("streamTable",!1,null)}},{key:"setResizableStreamList",value:function(){$("#listTable").colResizable({liveDrag:!0,gripInnerHtml:"<div class='grip'></div>",draggingClass:"dragging"})}}]),a}();b.exports=d},{}],4:[function(a,b,c){var d=function(){function a(){_classCallCheck(this,a)}return _createClass(a,[{key:"setCookie",value:function(a,b,c){var d=new Date;d.setTime(d.getTime()+24*c*60*60*1e3);var e="expires="+d.toUTCString();document.cookie=a+"="+b+"; "+e}},{key:"getCookie",value:function(a){for(var b=a+"=",c=document.cookie.split(";"),d=0;d<c.length;d++){for(var e=c[d];" "==e.charAt(0);)e=e.substring(1);if(0==e.indexOf(b))return e.substring(b.length,e.length)}return""}},{key:"areCookiesEnabled",value:function(){var a=navigator.cookieEnabled?!0:!1;return"undefined"!=typeof navigator.cookieEnabled||a||(document.cookie="testcookie",a=-1!=document.cookie.indexOf("testcookie")?!0:!1),this.CookiesEnabled=a,a}},{key:"getLayoutCookies",value:function(){try{var b=a.getCookie("chatw");if(!(""!=b&&b>50&&650>b))throw BreakException;var c=a.getCookie("listw");if(!(""!=c&&c>80&&500>c))throw BreakException;var d=a.getCookie("streamsw");if(!(""!=d&&d>350))throw BreakException;window.$colList.width(c),window.$chat.width(b),window.$streams.width(d)}catch(e){console.log("Reverted column dimensions to default")}}},{key:"getStreamCookies",value:function(){if("undefined"==typeof window.UrlParams[0]&&this.CookiesEnabled){console.log("No URL params. loading cookies");for(var a="index.html#",b=0;4>b;b++){var c=window.cookies.getCookie("stream"+b);if(null==c||""==c){window.history.pushState(null,null,a);break}a+="/"+c,window.WatchingStreams[b]=c,console.log("stream "+b+"- "+c)}console.log("cookies used to populate streams. URL: "+URL)}else console.log("Using URL to populate streams"),window.fillStreamsFromURL()}}]),a}();b.exports=d},{}],5:[function(a,b,c){function d(){window.storageEnabled=function(){var a="test";try{return localStorage.setItem(a,a),localStorage.removeItem(a),!0}catch(b){return!1}}(),window.Flash_Installed=swfobject.hasFlashPlayerVersion("1")?!0:!1,window.isMobile=window.matchMedia("(max-width: 1300px)").matches,window.MobileOrTablet=mobile.mobileOrTablet(),MobileOrTablet&&$(".fa").addClass("fa-2x"),window.RecentStreams=[],storageEnabled?(localStorage.RecentStreams||(localStorage.RecentStreams=""),RecentStreams=localStorage.RecentStreams.split(","),""===RecentStreams[0]&&(RecentStreams=[])):RecentStreams=[],window.UrlParams=window.parseURL(),cookies.CookiesEnabled=cookies.areCookiesEnabled(),window.Username=cookies.getCookie("username")||"",$(".scroll-pane").jScrollPane({showArrows:!0,arrowScrollOnHover:!0}),$(".toggleableFilter").click(function(a){a.stopPropagation()}),$(".toggleableSetting").click(function(a){a.stopPropagation()}),$("#game").keypress(function(a){a.stopPropagation()}),$("#streamer").keypress(function(a){a.stopPropagation()}),$("#Username").keypress(function(a){a.stopPropagation()})}b.exports=d},{}],6:[function(a,b,c){function d(){$("html").keypress(function(a){var b=$("#twitch_embed_player_"+SelectedStream)[0];switch(a.which){case 49:case 50:case 51:case 52:case 53:case 54:case 55:case 56:for(var c=0;4>c;c++){if(a.which==c+49){if(a.preventDefault(),window.ChangingSingleStreams=!0,1==window.NumStreams&&c!==window.SelectedStream){window.SingleStreamSelectorOffset=c,window.renderStreams();for(var d=0;4>d;d++)$("#chat"+d).hide();window.ActiveChat=c,$("#chat"+window.ActiveChat).show(),window.SingleStreamSelectorOffset=0,window.SelectedStream=c}else window.changeSelectedStream(c);break}if(a.which==c+53){for(a.preventDefault(),window.ActiveChat=c,d=0;4>d;d++)$("#chat"+d).hide();$("#chat"+window.ActiveChat).show();break}}break;case 32:a.preventDefault(),b.isPaused()?b.playVideo():b.pauseVideo();break;case 116:b.mute();break;case 117:b.unmute();break;case 97:window.$colList.toggle();var e=$(".collapseList"),f=$colList.width();window.ListIsHidden?(window.ListIsHidden=!1,e.css({top:0,left:f,position:"absolute","z-index":2})):(window.ListIsHidden=!0,e.css({top:0,left:0,position:"absolute","z-index":2}));break;case 100:window.$chat.toggle(),cResizer.ResetStreamColumnDrag();break;case 108:b.setQuality("Low");break;case 109:b.setQuality("Medium");break;case 104:b.setQuality("High");break;case 115:b.setQuality("Source");break;case 122:if(1!==window.NumStreams){for(0!==window.SelectedStream&&(window.SingleStreamSelectorOffset=window.SelectedStream),window.changeSelectedStream(SelectedStream),window.ActiveChat=window.SelectedStream,d=0;d<window.NumStreams;d++)$("#chat"+d).hide();$("#chat"+window.ActiveChat).show(),window.NumStreams=1,window.renderStreams(),window.SingleStreamSelectorOffset=0}break;case 120:2==window.NumStreams?"horizontal"==window.DivideStreams?window.DivideStreams="vertical":window.DivideStreams="horizontal":NumStreams=2,window.renderStreams();break;case 99:window.NumStreams=4,window.renderStreams()}})}b.exports=d},{}],7:[function(a,b,c){var d=function(){function a(){_classCallCheck(this,a),this.CListRefreshTimeMinutes,this.CNumListedStreamsStart=0,this.CNumListedStreamsEnd=25,this.CListRefreshTimeMinutes=cookies.getCookie("ListRefreshTimeMinutes")||60,this.NumListedStreamsStart=0,this.NumListedStreamsEnd=25,this.DefaultRequestURL="https://api.twitch.tv/kraken/streams?",this.RequestURL="https://api.twitch.tv/kraken/streams?",this.FilteringListStaticCounter=0,this.ListStaticCounter=0,this.FavIndexL=this.CNumListedStreamsStart,this.FavIndexH=this.CNumListedStreamsEnd,this.RecIndexL=this.CNumListedStreamsStart,this.RecIndexH=this.CNumListedStreamsEnd,this.ListAddCooldown=!1,this.NoListLockout=!0,this.List={}}return _createClass(a,[{key:"populateList",value:function(a,b){this.NoListLockout=!1,b&&this.flushNumListedStreams();var c=this;$.getJSON(a+"offset="+this.NumListedStreamsStart+"&limit="+this.NumListedStreamsEnd+"&callback=?",function(a){c.listLoader(a,b,b,c.NumListedStreamsEnd)})}},{key:"listLoader",value:function(a,b,c,d){var e=!1,f=a,g=$filterList.find(".activeFilter"),h=this;g.each(function(){var a=$(this).next("span").find("input").attr("id");"streamer"===a&&(f=h.filterByStreamer(f),e=!0),"game"===a&&(f=h.filterByGame(f),e=!0)}),b?($list.html(""),this.FilteringListStaticCounter=0,(0==e||c)&&(this.List=a,this.ListStaticCounter=0)):this.List.streams=this.List.streams.concat(a.streams),e&&(a=f);for(var i=0,j=this.NumListedStreamsStart;d>j&&(null!=a.streams[j-this.NumListedStreamsStart]&&""!=a.streams[j-this.NumListedStreamsStart]&&a.streams[j-this.NumListedStreamsStart]!={});j++){if(i=0==e?this.ListStaticCounter:this.FilteringListStaticCounter,CHideGame)var k="display:none;";else var k="";if(CHideDesc)var l="display:none;";else var l="";$list.append('<li style="position: relative; top:0; width: 100% !important;" class="Pic'+i+' listHoverClass"><img style="width:100%;" class="streamPic" src="'+a.streams[j-this.NumListedStreamsStart].preview.medium+'"><div class="listStreamName" style="width: 100%; height:100%;"><div style="height: auto;" class="strokeme wordwrap"><b>'+a.streams[j-this.NumListedStreamsStart].channel.name+'</b> - <span style="font-size: 75%; float: right:">'+a.streams[j-this.NumListedStreamsStart].viewers+'</span></div><div style="height: auto; font-size: 85%; '+k+'" id="gameName" class="listHidden strokeme wordwrap"><i>'+a.streams[j-this.NumListedStreamsStart].game+'</i></div><div style="height: auto; position:absolute; bottom:0; '+l+'" id="gameStatus" class="listHidden strokeme wordwrap"><span style="font-size: 85%;">'+a.streams[j-this.NumListedStreamsStart].channel.status+"</span></div></div></li>"),$(".listHoverClass").hover(function(){$(this).find(".listHidden").show()},function(){CHideGame&&$(this).find("#gameName").hide(),CHideDesc&&$(this).find("#gameStatus").hide()}),$(".listStreamName").css({bottom:0,position:"absolute",width:"100%"}),window.FirstTimeRenderingStreams&&window.renderStreams(),$(".Pic"+i).click(loadNewStream(a.streams[j-this.NumListedStreamsStart].channel.name)),0==e?this.ListStaticCounter++:this.FilteringListStaticCounter++,this.NoListLockout=!0}}},{key:"flushNumListedStreams",value:function(){this.NumListedStreamsEnd=this.CNumListedStreamsEnd,this.NumListedStreamsStart=this.CNumListedStreamsStart}},{key:"filterByStreamer",value:function(a){for(var b={streams:[]},c=$("#streamer").val(),d=0;d<a.streams.length;d++){var e=new RegExp(c,"i");a.streams[d].channel.name.search(e)>-1&&b.streams.push(a.streams[d])}return console.log("newList"),console.log(b),b}},{key:"filterByGame",value:function(a){console.log("streams"),console.log(a);for(var b={streams:[]},c=$("#game").val(),d=new RegExp(c,"i"),e=0;e<a.streams.length;e++)a.streams[e].game.search(d)>-1&&b.streams.push(a.streams[e]);return b}},{key:"controlListScroll",value:function(){function a(){b.ListAddCooldown=!1,clearInterval(b.addListTimer)}var b=this;$(".colList ul").scroll(function(){0==$(document).scrollTop()&&b.NumListedStreamsEnd<251&&0==b.ListAddCooldown&&($("#topStreams").hasClass("activeButton")&&(b.NumListedStreamsEnd+=25,b.NumListedStreamsStart+=25,b.addToTopStreams(!1)),$("#favStreams").hasClass("activeButton")&&window.addToFavStreams("",!1),$("#recStreams").hasClass("activeButton")&&(b.NumListedStreamsEnd+=25,b.NumListedStreamsStart+=25,b.addToRecStreams(!1)),b.ListAddCooldown=!0,b.addListTimer=setInterval(a,1500))}),b.refreshListInterval=setInterval(b.populateList(b.RequestURL,!0),6e4*b.CListRefreshTimeMinutes)}},{key:"addToRecStreams",value:function(a){function b(e){var f=RecentStreams.slice(e.RecIndexL,e.RecIndexH).toString();return console.log("qString"),console.log(f),4==d||""==f||null==f?void(e.NoListLockout=!0):(d++,void $.getJSON("https://api.twitch.tv/kraken/streams?channel="+f+"&callback=?").done(function(f){console.log("addToRecStreams recent:"),console.log(f),e.NumListedStreamsEnd+=f.streams.length,e.listLoader(f,a,!1,e.NumListedStreamsEnd),e.NumListedStreamsStart+=f.streams.length,e.RecIndexL+=e.CNumListedStreamsEnd,e.RecIndexH+=e.CNumListedStreamsEnd,a=!1,c+=f.streams.length,1>c?b(e):(d=4,e.NoListLockout=!0)}))}this.NoListLockout=!1,a&&(this.flushNumListedStreams(),this.NumListedStreamsEnd=0,this.RecIndexL=this.CNumListedStreamsStart,this.RecIndexH=this.CNumListedStreamsEnd);var c=0,d=0,e=this;b(e)}},{key:"addToTopStreams",value:function(a){this.NoListLockout&&(this.NoListLockout=!1,this.populateList(list.DefaultRequestURL,a),this.NoListLockout=!0)}}]),a}();b.exports=d},{}],8:[function(a,b,c){var d=function(){function a(){_classCallCheck(this,a)}return _createClass(a,[{key:"mobile",value:function(){var a=!1;return function(b){(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(b)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(b.substr(0,4)))&&(a=!0)}(navigator.userAgent||navigator.vendor||window.opera),a}},{key:"mobileOrTablet",value:function(){var a=!1;return function(b){(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino|android|ipad|playbook|silk/i.test(b)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(b.substr(0,4)))&&(a=!0)}(navigator.userAgent||navigator.vendor||window.opera),a}},{key:"detectmobBySize",value:function(){return window.innerWidth<=800&&window.innerHeight<=600?!0:!1}},{key:"detectmobByNavigator",value:function(){return navigator.userAgent.match(/Android/i)||navigator.userAgent.match(/webOS/i)||navigator.userAgent.match(/iPhone/i)||navigator.userAgent.match(/iPad/i)||navigator.userAgent.match(/iPod/i)||navigator.userAgent.match(/BlackBerry/i)||navigator.userAgent.match(/Windows Phone/i)?!0:!1}}]),a}();b.exports=d},{}],9:[function(a,b,c){function d(){var a=[],b=window.location.href,c=b.split(/index\.html#?\/?/);if(URL=c[0]+"/index.html#",c[1])var d=c[1].split("/");else var d="";for(var e=0;e<d.length;e++){var f=decodeURIComponent(d[e]);f&&(a[e]=f)}return a}b.exports=d},{}],10:[function(a,b,c){function d(){function a(){for(var a=0;a<NumStreams;a++)$("#twitch_embed_player_"+a).find("param[name='allowScriptAccess']").attr("value","sameDomain")}function b(){var a=$(".collapseList"),b=$(".collapseChat");if(window.isMobile?(d(),a.show(),b.show(),window.$list.click(c)):($streams.hover(function(){a.show(),b.show()}),$chat.hover(function(){a.fadeOut(200),b.fadeOut(200)}),$colList.hover(function(){a.fadeOut(200),b.fadeOut(200)})),$colList.width()>100)var e=$colList.width();else var e=500;a.parent().css({position:"relative"}),ListIsHidden?a.css({top:0,left:0,position:"absolute","z-index":2}):a.css({top:0,left:e,position:"absolute","z-index":2}),a.click(c),b.css({top:0,right:0,position:"absolute","z-index":2}),b.click(d)}function c(){$colList.toggle(),ListIsHidden?(ListIsHidden=!1,$collapseList.css({top:0,left:lw,position:"absolute","z-index":2})):(ListIsHidden=!0,$collapseList.css({top:0,left:0,position:"absolute","z-index":2}))}function d(){$chat.toggle(),cResizer.ResetStreamColumnDrag()}showStreamsLoadScreen();var e="";switch(NumStreams){case 1:window.Flash_Installed&&!window.isMobile?e+='<div id="twitch_embed_player_0"></div>':e=e+'<span class="stream0" style="width: 100%; height:100%;"><iframe src="http://www.twitch.tv/'+WatchingStreams[0]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe><param name="menu" value="false" /></span>';break;case 2:"horizontal"==DivideStreams?window.Flash_Installed&&!window.isMobile?(e+='<div style="height: 100%; width: 100%;"><table style="height: 100%; width: 100%;" id="streamTable" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td><div id="twitch_embed_player_0"></div></td>',e+='<td><div id="twitch_embed_player_1"></div></td></tr><tbody></table></div>'):(e=e+'<div style="height: 100%; width: 100%;"><table style="height: 100%; width: 100%;" id="streamTable" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="stream0"><iframe src="http://www.twitch.tv/'+WatchingStreams[0]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe></td>',e=e+'<td class="stream1"><iframe src="http://www.twitch.tv/'+WatchingStreams[1]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe></td></tr><tbody></table></div>'):"vertical"==DivideStreams&&(window.Flash_Installed&&!window.isMobile?(e+='<div style="height: 100%; width: 100%;"><table style="height: 100%; width: 100%;" id="streamTable" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td><div id="twitch_embed_player_0"></div></td></tr>',e+='<tr><td><div id="twitch_embed_player_1"></div></td></tr></tbody></table></div>'):(e=e+'<div style="height: 100%; width: 100%;"><table style="height: 100%; width: 100%;" id="streamTable" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="stream0"><iframe src="http://www.twitch.tv/'+WatchingStreams[0]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe></td></tr>',e=e+'<tr><td class="stream1"><iframe src="http://www.twitch.tv/'+WatchingStreams[1]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe></td></tr></tbody></table></div>'));break;case 4:window.Flash_Installed&&!window.isMobile?(e+='<table  style="height: 100%; width: 100%;" id="streamTable" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td><div id="twitch_embed_player_0"></div></td>',e+='<td><div id="twitch_embed_player_1"></div></td></tr>',e+='<tr><td><div id="twitch_embed_player_2"></div></td>',e+='<td><div id="twitch_embed_player_3"></div></td></tr></tbody></table>'):(e=e+'<table  style="height: 100%; width: 100%;" id="streamTable" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="stream0"><iframe src="http://www.twitch.tv/'+WatchingStreams[0]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe></td>',e=e+'<td class="stream1"><iframe src="http://www.twitch.tv/'+WatchingStreams[1]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe></td></tr>',e=e+'<tr><td class="stream2"><iframe src="http://www.twitch.tv/'+WatchingStreams[2]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe></td>',e=e+'<td class="stream3"><iframe src="http://www.twitch.tv/'+WatchingStreams[3]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe></td></tr></tbody></table>')}e+='<a href="#" class="collapse collapseList" style="display: none;"><i class="fa fa-2x fa-caret-left"></i></a><a href="#" class="collapse collapseChat" style="display: none;"><i class="fa fa-2x fa-caret-right"></i></a>';var f='<div style="height:100%;" id="loadingDivShow" class="divShowHandle" style="visibility: hidden;">'+e+'<div id="selectedStreamPopup" style="position: absolute; top: 0; right: 50%; width: 8%; display: none; color: white; z-index:2;"><i class="fa fa-2x fa-television" style="color: white;"></i><span></span></div>';$streams.html(f),window.isMobile&&($(".fa-caret-right").addClass("fa-4x"),$(".fa-caret-left").addClass("fa-4x")),$selectedStreamPopup=$("#selectedStreamPopup");for(var g=0;g<NumStreams;g++){var h=g+SingleStreamSelectorOffset;window.Flash_Installed&&!window.isMobile?(window["onPlayerEvent"+g]=function(a){a.forEach(function(a){"playerInit"==a.event&&($("#loadingDivShow").removeAttr("id"),$(".divShowHandle").attr("id","loadingDivShowFinal"),$(".loadingDivHide").hide(),ChangingSingleStreams?(changeSelectedStream(h),ChangingSingleStreams=!1):changeSelectedStream(0))})},swfobject.embedSWF("http://www-cdn.jtvnw.net/swflibs/TwitchPlayer.swf","twitch_embed_player_"+g,"100%","100%","11",null,{eventsCallback:"onPlayerEvent"+g,embed:1,channel:WatchingStreams[h],auto_play:"true"},{allowScriptAccess:"always",allowFullScreen:"true"})):($("#loadingDivShow").removeAttr("id"),$(".divShowHandle").attr("id","loadingDivShowFinal"),$(".loadingDivHide").hide(),ChangingSingleStreams?(changeSelectedStream(h),ChangingSingleStreams=!1):changeSelectedStream(0),$(".stream"+g).html('<iframe src="http://www.twitch.tv/'+WatchingStreams[h]+'/embed" frameborder="0" scrolling="no"NaN'))}if(cResizer.ResetStreamColumnDrag(),b(),a(),FirstTimeRenderingStreams){FirstTimeRenderingStreams=!1;for(var e="",h=0;4>h;h++)e+='<div id="chat'+h+'" style="display: none; height: 100vh; width: 100%;"><iframe class="asdf" style="z-index: 5;"src="http://www.twitch.tv/'+WatchingStreams[h]+'/chat" frameborder="0" scrolling="no" id="chat_embed"height="100%" width="100%"></iframe></div>';$chat.html(""),$chat.html(e),$("#chat"+ActiveChat).show()}}b.exports=d},{}],11:[function(a,b,c){function d(){$("#topStreams").click(function(){$(this).hasClass("activeButton")||($(".activeButton").removeClass("activeButton"),$(this).addClass("activeButton"),list.addToTopStreams(!0))}),$("#recStreams").click(function(){list.NoListLockout&&($(this).hasClass("activeButton")||($(".activeButton").removeClass("activeButton"),$(this).addClass("activeButton"),list.NoListLockout=!1,list.addToRecStreams(!0)))}),$("#favStreams").click(function(){if(!$(this).hasClass("activeButton")){if(""!=window.Username&&null!=window.Username)console.log("Using as "+window.Username);else{var a=prompt("Enter your Twitch username to use the favorites tab:","");if(""==a||null==a)return;cookies.setCookie("username",a,365),window.Username=a}list.NoListLockout&&(list.NoListLockout=!1,$(".activeButton").removeClass("activeButton"),$(this).addClass("activeButton"),storageEnabled&&cookies.CookiesEnabled&&("undefined"==typeof localStorage.FavoritesString||null==localStorage.FavoritesString||""==localStorage.FavoritesString||null==localStorage.SortedFavoritesString||"undefined"==typeof localStorage.SortedFavoritesString||""==localStorage.SortedFavoritesString||null==cookies.getCookie("FRefreshSession")||""==cookies.getCookie("FRefreshSession")?(console.log("refreshed Favorites"),cookies.setCookie("FRefreshSession",!0,.1),window.deferred1=$.Deferred(),window.deferred2=$.Deferred(),window.refreshFavoritesString(!1),window.deferred1.done(function(a){window.getFavStreamsAndSort(a)}),window.deferred2.done(function(a){window.addToFavStreams(a,!0)})):(console.log(cookies.getCookie("FRefreshSession")),console.log("didnt refresh anything"),window.FavoritesString=localStorage.FavoritesString,window.SortedFavoritesString=localStorage.SortedFavoritesString,window.addToFavStreams("",!0))))}}),$filterList.find(".toggleableFilter i, .toggleableFilter span, .toggleableFilter span input").click(function(a){return"INPUT"===$(this).prop("tagName")?void a.stopPropagation():void($(this).hasClass("activeFilter")?($(this).removeClass("activeFilter"),$(this).next("span").find("input").off("input"),list.flushNumListedStreams(),list.listLoader(List,!0,!1,list.NumListedStreamsEnd)):$(this).hasClass("i")?($(this).addClass("activeFilter"),list.flushNumListedStreams(),list.listLoader(list.List,!0,!1,list.NumListedStreamsEnd),alert("white check!")):$(this).parent().find("i").hasClass("activeFilter")?($(this).parent().find("i").removeClass("activeFilter"),$(this).next("span").find("input").off("input"),list.flushNumListedStreams(),list.listLoader(list.List,!0,!1,list.NumListedStreamsEnd)):($(this).parent().find("i").addClass("activeFilter"),list.flushNumListedStreams(),list.listLoader(list.List,!0,!1,list.NumListedStreamsEnd)))}),$("input").on("input",function(){""===$(this).val()?$(this).closest("li").find("i").removeClass("activeFilter"):$(this).closest("li").find("i").hasClass("activeFilter")||""===$(this).val()||$(this).closest("li").find("i").addClass("activeFilter"),list.flushNumListedStreams(),list.listLoader(list.List,!0,!1,list.NumListedStreamsEnd)}),$("#listSize").change(function(){$colList.css("width",$(this).val()+"%")}),$("#chatSize").change(function(){$chat.css("width",$(this).val()+"%"),$streams.css("width",100-$(this).val()+"%"),cResizer.ResetOuterColumnDrag(),cResizer.ResetStreamColumnDrag()}),$("#refreshPeriod").change(function(){"NEVER"===$(this).val()?CListRefreshTimeMinutes=9999999999:CListRefreshTimeMinutes=$(this).val()})}b.exports=d},{}],12:[function(a,b,d){function e(){window.fillStreamsFromURL=function(){try{if(UrlParams){var a=0;UrlParams.forEach(function(b){if(console.log(b+", "),WatchingStreams[a]=b,addToRecentStreams(),a>3)throw BreakException;++a})}}catch(b){alert("Maximum of 4 streams!")}finally{var c=WatchingStreams.length||0;NumStreams=0==c?1:1==c?1:2==c?2:4}window.parseURL()},window.loadNewStream=function(a){return function(){WatchingStreams[SelectedStream]=a,addToRecentStreams();var b=SelectedStream;1==NumStreams&&(b=0),$("#chat"+SelectedStream).html('<iframe style="z-index: 5; float: left;" src="http://www.twitch.tv/'+a+'/chat" frameborder="0" scrolling="no" id="chat_embed" height="100%" width="100%"></iframe>'),
-Flash_Installed?$("#twitch_embed_player_"+b)[0].loadStream(a):$(".stream"+b).html('<iframe src="http://www.twitch.tv/'+WatchingStreams[c]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe>');var d=URL;WatchingStreams.forEach(function(a){"undefined"!=a&&(d+="/"+a)}),window.history.replaceState(null,null,d)}},window.addToRecentStreams=function(){WatchingStreams.forEach(function(a){null!=a&&""!=a&&(-1!==$.inArray(a,RecentStreams)||RecentStreams.push(a))})},window.changeSelectedStream=function(a){SelectedStream=a;var b=a+1;$selectedStreamPopup.find("span").html('<span style="font-size: 200%;"> '+b+"</span>"),$selectedStreamPopup.show();var c=setInterval(function(){$selectedStreamPopup.fadeOut(300),clearInterval(c)},1e3)},window.showStreamsLoadScreen=function(){$streams.html('<div class="fa loadingDivHide"><i class="loadingDivHide fa fa-3x fa-cog fa-spin"></i><div class="fa-cog-text" style="color:white;">Working on it...</div></div>')},window.getFavStreamsAndSort=function(a){""!=a&&null!=a&&"undefined"!=typeof a&&(FavoritesString=a),console.log("refreshed SessionFavoritesString"),$.getJSON("https://api.twitch.tv/kraken/streams?limit=100&channel="+FavoritesString+"&callback=?").done(function(a){console.log("arr2"),console.log(a);var b=0;a.streams.forEach(function(a){null!=a&&""!=a&&a!={}&&(Favorites[b]=a,b++)});var c=Favorites.length;console.log("favorites.length"),console.log(Favorites.length);for(var d=[],e=0;c>e;e++)d[e]=e;for(var f=0;c-1>f;f++)for(var g=0;c-1>g;g++){var h=d[g],i=d[g+1];if(Favorites[h].viewers<Favorites[i].viewers){var j=d[g];d[g]=d[g+1],d[g+1]=j}}console.log("sorted favorites:"),console.log(Favorites);for(var k=0;k<Favorites.length;k++)Favorites[k]=Favorites[k].channel.name;localStorage.SortedFavoritesString=Favorites.toString(),deferred2.resolve(localStorage.SortedFavoritesString),cookies.setCookie("FRefreshSession",!0,.025)}).fail(function(){list.NoListLockout=!0,refreshingList=!1,console.log("AJAX REQUEST FOR RECENT STREAMS FAILED!")})}}b.exports=e},{}]},{},[1]);
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+//SEARCH FOR GAMES (FROM A PREMADE LIST)
+// https://api.twitch.tv/kraken/streams?game=
+//SEARCH FOR CHANNELS FROM A PREMADE LIST
+// https://api.twitch.tv/kraken/streams?channel=
+
+// https://api.twitch.tv/kraken/search/channels?q=Lineage%20II:%20The%20Chaotic%20Chronicle
+// https://api.twitch.tv/kraken/search/games?q=Lineage&type=suggest&live
+
+//THIS ONE WILL DO PARTIAL QUERIES FOR STREAMS
+// https://api.twitch.tv/kraken/search/streams?q=Lineage&limit=100&offset=0&type=suggest&live
+//THIS ONE WILL DO PARTIAL QUERIES FOR GAMES
+//https://api.twitch.tv/kraken/search/games?q=counter&limit=100&offset=0&type=suggest&live
+// THIS ONE WILL DO PARTIAL QUERIES AGAINST ALL
+//https://api.twitch.tv/kraken/search/channels?q=Programming
+
+
+
+
+"use strict";
+// window.onload = function(){
+$(function(){
+
+	// document.domain=document.domain;	//iframe->document port matching. The Twitch API sets the domain correctly, so no problems there
+
+	(require('./streamUtils.js'))();
+	window.cookies= new (require('./cookies.js'));
+	window.mobile= new (require('./mobile.js'));
+	window.list= new(require('./listManager.js'));
+	window.parseURL= require('./parseURL.js');
+	window.renderStreams= require('./renderStreams.js');
+	window.cResizer= new(require('./columnResizer.js'));
+//init script
+	(require('./init.js'))();
+
+
+
+
+	window.renderStreamsSortList=function(){
+		for(var i=0;i<4;i++){
+			$('#Stream'+i).text(WatchingStreams[i]);
+		}
+	}
+
+
+
+
+
+	//WE ONLY WANT TO HIT THE TWITCH API EVERY FEW DAYS OR SO TO REFRESH FAVORITES, ELSE THERE WOULD BE TOO MANY HITS
+	//HIT THE API TO REFRESH THE FAVORITES STRING IN LOCAL STORAGE EVERY THREE DAYS. SET THE GLOBAL FavoritesString TO localStorage.FavoritesString
+			//THIS IS ONLY MADE TO BE RUN AT STARTUP TO LOAD THE OLD FavoritesString TO SEE IF IT'S EXPIRED... USE FRefreshSession INSTEAD OF
+			//FRefresh COOKIE TO TRACK VIEWERCOUNT STALENESS
+			//NOTE FRefresh IS FOR CHECKING FOR FAVORITES LIST STALENESS, WHILE FRefreshSession IS TO CHECK FOR VIEWERCOUNT STALENESS ON FRefresh LIST'S MEMBERS (they have different expiry dates)
+	window.refreshFavoritesString= function(force){
+
+		//CHECK THE BROWSER FOR LOCAL STORAGE SUPPORT AND SEE IF COOKIES ARE ENABLED...
+			if(storageEnabled && cookies.CookiesEnabled) {
+				if(force || typeof (localStorage.FavoritesString) == 'undefined' || localStorage.FavoritesString == null || cookies.getCookie('FRefresh') == null || cookies.getCookie('FRefresh') == ''){
+					console.log('refreshed FavoritesString');
+					$.getJSON('https://api.twitch.tv/kraken/users/'+Username+'/follows/channels?limit='+CFavStreamsSearchLimit+'&offset=0&callback=?')
+					.done(function(arr){           //ON SUCCESS
+
+									var stringArray = [];
+								arr.follows.forEach(function(stream){
+									stringArray.push(stream.channel.name);
+										});
+										//SAVE THE FAVORITES STRING INTO LOCAL STORAGE, MAKE A TRACKING COOKIE THAT GIVES IT AN EXPIRY DATE
+										localStorage.setItem("FavoritesString", stringArray.toString());
+										cookies.setCookie("FRefresh", true, 3);
+									  deferred1.resolve(localStorage.FavoritesString);
+														// localStorage.removeItem("lastname");
+								})
+								//ON ERROR
+					.fail(function(){
+								console.log('ATTEMPT TO GET USER\'S FOLLOWED STREAMS FAILED!' );
+								deferred1.resolve('');
+					});
+
+				}
+				else deferred1.resolve(localStorage.FavoritesString);
+			}
+			else {
+			    console.log('Favorites wont work - you need to enable cookies and local storage. You may not have native local storage support in your browser');
+					$('#favStreams').off('click');
+					deferred1.resolve('');
+			}
+
+	}
+
+
+
+
+
+
+
+  //CONFIG VARIABLES
+window.CFavStreamsSearchLimit = 400;   //maximum number of followed streams to fetch from the API to inspect for live-ness to populate the favorites list
+window.CHideGame = false;
+window.CHideDesc = true;
+window.CSaveRecentStreams = true;
+
+
+  //INITIALIZE
+window.lw=500;
+window.NumStreams=1;  //number of streams being displayed, NOT the number of streams in the watching-list
+window.SelectedStream=0;   //the stream that is "active" to be changed on a list click
+window.WatchingStreams=[]; //the streams being watched
+window.DivideStreams='horizontal';
+window.ActiveChat=0;
+window.addListTimer = null;
+window.FirstTimeRenderingStreams = true;
+window.ListIsHidden = false;
+window.ChatIsHidden = false;
+window.SingleStreamSelectorOffset=0;
+window.ChangingSingleStreams=false;    //used in the renderStreams function's .Init listener on the flash players to correctly show the channel number on SelectedStream change
+window.Favorites=[];
+window.FavoritesFirstClick=true;
+window.FavoritesString = '';
+window.SortedFavoritesString = '';
+window.deferred1 = $.Deferred();
+window.deferred2 = $.Deferred();
+
+
+
+  //CACHE DOM
+window.$list = $('#list');
+window.$colList = $('.colList');
+window.$streams = $('.colStreams');
+window.$chat = $('.colChat');
+window.$selectedStreamPopup = window.$streams;    //meaningless; purely for initialization;
+window.$filterList = $('#filterList');
+
+
+	//RUN
+
+//CHOOSE BETWEEN LOADING FROM COOKIES OR USING URL PARAMS (TRIES URL PARAMS FIRST)
+			window.URL='';       //without appended streams or index.html#
+			UrlParams= parseURL();
+if(typeof UrlParams[0] == "undefined" && CookiesEnabled){
+  console.log('No URL params. loading cookies');
+  cookies.getStreamCookies();    //brings back the streams stored in the cookies session and updates the URL to reflect that (but only if a custom URL is not set)
+}
+else{
+	console.log('Using URL to populate streams');
+	WatchingStreams = fillStreamsWithURLParams(UrlParams,WatchingStreams);
+};
+// alert(window.history.length);
+
+showStreamsLoadScreen();
+cookies.getLayoutCookies();     //loads layout cookies and does resizing
+cResizer.setResizableColumns('sample',true,cResizer.ResetStreamColumnDrag);
+addToRecentStreams();   //sets recent streams to the streams you are initially watching
+
+list.populateList(list.DefaultRequestURL,true);
+list.controlListScroll();
+
+window.renderStreamsSortList();
+
+(require('./streamListButtonListeners.js'))();
+(require('./closeListener.js'))();  //creates cookies to store layout info for getLayoutCookies and getStreamCookies
+cResizer.setResizableStreamList();
+(require('./keyListenersSetup.js'))();
+
+$( window ).resize(function() {
+	var $collapseList = $(".collapseList");
+	var $collapseChat = $('.collapseChat');
+	$collapseList.css({top: 0, left: $colList.width(), position:'absolute', 'z-index': 2});
+	$collapseChat.css({top: 0, right: 0, position:'absolute', 'z-index': 2});
+});
+
+});
+
+
+//THIS IS THE MASTER THAT REFRESHES ALL THE RESIZERS AT ONCE
+	// function ResetAllDragColumns(){
+	//   ResetOuterColumnDrag();
+	//   ResetStreamColumnDrag();
+	// }
+
+
+//WINDOW.RESIZEBY() (ONLY WORKS ON WINDOWS YOU MADE) NEED THIS TO UNBREAK THE CHAT. THE CHAT DOESNT FIT ITSELF WHEN YOU FIRST EMBED IT.
+	// function DoBrowserResizeCycle(){
+	//   var height = $(window).height();
+	//   var width = $(window).width();
+	//   alert($(window).width());
+	//   window.resizeBy(-500, 0);
+	//   alert($(window).width());
+	//   // window.resizeTo(width, height);
+	// }
+
+
+// this.$OuterDiv = $(document.createElement('div'))     //$('<div></div>') also works instead of document.create....
+//     .hide()
+//     .append($('<table></table>')
+//         .attr({ cellSpacing : 0 })
+//         .addClass("text")
+//     );
+//
+//
+
+
+// $(document).ready(function() {
+//     $("a").click(function(event) {
+//         alert(event.target.id);
+//     });
+// });
+//
+// $(document).ready(function() {
+//     $("a").click(function(event) {
+//         // this.append wouldn't work
+//         $(this).append(" Clicked");
+//     });
+// });
+
+//WRAP FUNCTION
+	// $( ".inner" ).wrap(function() {
+	//   return "<div class='" + $( this ).text() + "'></div>";
+	// });
+
+//GETTING % WIDTHS OF ELEMENTS (here its class of box)
+	// var width = $('.box').clone().appendTo('body').wrap('<div style="display: none"></div>').css('width');
+	// alert(width);
+
+//WINDOW.LOCATION
+	// window.location.href returns the href (URL) of the current page
+	// window.location.hostname returns the domain name of the web host
+	// window.location.pathname returns the path and filename of the current page
+	// window.location.protocol returns the web protocol used (http:// or https://)
+	// window.location.assign loads a new document
+
+
+//MONITOR EVENTS
+//type in console:
+	// monitorEvents($0)		//$0 is just the last element in the DOM, can replace with whatever you want
+	// unmonitorEvents($0)
+
+},{"./closeListener.js":2,"./columnResizer.js":3,"./cookies.js":4,"./init.js":5,"./keyListenersSetup.js":6,"./listManager.js":7,"./mobile.js":8,"./parseURL.js":9,"./renderStreams.js":10,"./streamListButtonListeners.js":11,"./streamUtils.js":12}],2:[function(require,module,exports){
+//COOKIES - GET LAYOUT ON CLOSE, GET WATCHING STREAMS
+  function createCloseListener(){
+      window.onbeforeunload = function(e) {
+
+         cookies.setCookie("listw", $colList.width(), 90);
+         cookies.setCookie("chatw", $chat.width(), 90);
+         cookies.setCookie("streamsw", $streams.width(), 90);
+         cookies.setCookie("ListRefreshTimeMinutes", list.CListRefreshTimeMinutes, 90);
+         if (window.CSaveRecentStreams) localStorage.RecentStreams = window.RecentStreams.toString();
+         else localStorage.RecentStreams = '';
+        //  localStorage.removeItem('RecentStreams');
+
+         for (var i=0;i<4;i++){
+           if(window.WatchingStreams[i]!='' && window.WatchingStreams[i]!=null) cookies.setCookie("stream"+i, window.WatchingStreams[i], 90);
+           else { while(i<4){
+                cookies.setCookie("stream"+i,'', 90);
+                ++i;
+                // alert("set cookie " + window.WatchingStreams[i]);
+              }
+             break;}
+          //  alert(window.WatchingStreams[i]);
+         }
+         
+        return null;   //THIS IS THE EVENT HANDLER (FUNCTION) FOR CLOSING THE TAB (OR REFRESHING). WE DONT NEED ONE HERE
+        }
+    }
+
+module.exports= createCloseListener;
+
+},{}],3:[function(require,module,exports){
+//FOR RESIZABLE COLUMN SUPPORT
+  //CAN MAKE A SEPARATE RESIZE HANDLERR FOR EACH EMBEDDED RESIZABLE COLUMN SET, MAKING THEM CALL DOWN THE CHAIN RECURSIVELY.
+  //THIS WILL REFRESH THE ENTIRE CHAIN DOWNWARDS WHEN A HIGHER LEVEL COLUMN ANCHOR IS MOVED, KEEPING ALL LOWER LEVEL ANCHORS ACCURATE
+
+class columnResizer {
+
+  setResizableColumns(id,isOuter,resizeChildHandler){
+    if(isOuter){
+      $("#"+id).colResizable(
+        {liveDrag:true,
+         gripInnerHtml:"<div class='grip'></div>",
+        draggingClass:"dragging",
+        partialRefresh:"true",
+        onResize: function(){
+                  // chatWidth=$chat.width();
+                  // listWidth=$colList.width();
+                    //THIS IS A HACK TO FIX THE TWITCH DRAGGING-CHAT-OF-DEATH
+                  // if(NumStreams>1) renderStreams();
+
+                resizeChildHandler()
+                }
+       }
+      );
+   }
+   else {
+     $("#"+id).colResizable(
+       {liveDrag:true,
+        gripInnerHtml:"<div class='grip'></div>",
+       draggingClass:"dragging",
+       partialRefresh:"true"      //might not even be neccessary
+      }
+     );
+   }
+  }
+
+  ResetOuterColumnDrag(){
+      $("#sample").colResizable({
+        disable:true
+      });
+
+    this.setResizableColumns('sample',true,this.ResetStreamColumnDrag);
+     }
+
+     //NEED TO USE THIS TO MOVE THE STREAM COLUMN RESIZER HANDLES WHEN YOU SHOW OR HIDE THE SIDE COLUMNS
+   ResetStreamColumnDrag(){
+     if(window.NumStreams>1){
+         $("#streamTable").colResizable({
+           disable:true
+       });
+   }
+      this.setResizableColumns('streamTable',false,null);
+     }
+
+    //FOR THE STREAM LIST
+  setResizableStreamList(){
+    $("#listTable").colResizable(
+      {liveDrag:true,
+       gripInnerHtml:"<div class='grip'></div>",
+      draggingClass:"dragging",
+      // partialRefresh:"true"      //might not even be neccessary
+     }
+    );
+  }
+
+}
+
+module.exports= columnResizer;
+
+},{}],4:[function(require,module,exports){
+//COOKIE UTILITY FUNCTIONS
+class cookies{
+
+	 setCookie(cName, cValue, expiryDays) {
+	    var d = new Date();
+	    d.setTime(d.getTime() + (expiryDays*24*60*60*1000));
+	    var expires = "expires="+d.toUTCString();
+	    document.cookie = cName + "=" + cValue + "; " + expires;
+	}
+
+	 getCookie(cName) {
+	    var name = cName + "=";
+	    var ca = document.cookie.split(';');
+	    for(var i=0; i<ca.length; i++) {
+	        var c = ca[i];
+	        while (c.charAt(0)==' ') c = c.substring(1);
+	        if (c.indexOf(name) == 0) return c.substring(name.length, c.length);
+	    }
+	    return "";
+	}
+
+
+	 areCookiesEnabled(){
+		var cookieEnabled = (navigator.cookieEnabled) ? true : false;
+
+		if (typeof navigator.cookieEnabled == "undefined" && !cookieEnabled){
+			document.cookie="testcookie";
+			cookieEnabled = (document.cookie.indexOf("testcookie") != -1) ? true : false;
+		}
+		this.CookiesEnabled = cookieEnabled;
+		return cookieEnabled;
+
+	}
+
+
+
+//SET LAYOUT
+	getLayoutCookies() {
+
+	      //SIZING WITH COOKIES AND SIZING RESET STUFF - USES PIXELS, SO NOT REALLY FUTURE-PROOF
+	      //WILL FALL BACK TO DEFAULTS IF THE USER BREAKS COLUMN SIZES
+	    try{
+	    var chatw = cookies.getCookie("chatw");
+	      if (chatw != "" && chatw>50 && chatw<650) {} else throw BreakException;
+	    var listw = cookies.getCookie("listw");
+	      if (listw != "" && listw>80 && listw<500) {} else throw BreakException;
+	    var streamsw = cookies.getCookie("streamsw");
+	      if (streamsw != "" && streamsw>350) {} else throw BreakException;
+
+	    // alert('Chat Width: '+chatw); alert('List Width: '+listw); alert('Streams Width: '+streamsw);
+
+	    //HAVE COOKIE RESTORE DISABLED ATM
+	    window.$colList.width(listw);
+	    window.$chat.width(chatw);
+	    window.$streams.width(streamsw);
+
+	    // alert('Chat Width: '+chatw); alert('List Width: '+listw); alert('Streams Width: '+streamsw);
+	    }
+	    catch (e) {console.log('Reverted column dimensions to default')}
+
+	  }
+
+
+
+//BRING BACK PREVIOUS STREAMS (BUT ONLY IF URL PARAMS ARE NOT SET)
+	getStreamCookies(){
+
+	    var push='index.html#';
+	    for (var i=0;i<4;i++){
+	      var cookie = window.cookies.getCookie('stream'+i);
+	      if(cookie!=null && cookie!='') {
+	        push+='/'+cookie;
+	        window.WatchingStreams[i]=cookie;
+	        console.log('stream '+i+'- '+cookie);
+	      }
+	      else {
+					window.history.pushState(null, null, push);
+					break;
+				}
+	    }
+			var length = WatchingStreams.length || 0;
+	    window.NumStreams=(length==0?1 :length==1?1 :length==2?2 :length==3?4: length==4?4 :4);
+	    console.log('cookies used to populate streams. URL: ' + URL);
+
+	}
+
+
+};
+
+module.exports=cookies;
+
+},{}],5:[function(require,module,exports){
+function init(){
+
+// //REDIRECT FOR THE HELP BUTTON
+//       $('#Help').click(function(){
+//         window.open('http://www.streamstreamstream.com/help.txt');
+//       });
+
+
+//CHECK FLASH INSTALLED
+// var Flash_Installed = ((typeof navigator.plugins !== "undefined" && typeof navigator.plugins["Shockwave Flash"] === "object") || (window.ActiveXObject && (new ActiveXObject("ShockwaveFlash.ShockwaveFlash")) !== false));
+      window.Flash_Installed = (swfobject.hasFlashPlayerVersion("1")) ? true : false;
+
+
+//CHECK FOR MOBILE... AN (UNSTABLE) ALTERNATIVE TO MEDIA QUERIES
+//matchMedia is relatively new. Theres a modernizr equivalent and a polyfill on github
+      window.isMobile = window.matchMedia("(max-width: 1300px)").matches;
+
+      if (window.isMobile){
+  			$('.fa').addClass('fa-2x');
+  		}
+      //mq.matches as a test (not a function)
+
+//ENLARGE MENU ICONS FOR TOUCHSCREENS
+  		window.MobileOrTablet= mobile.mobileOrTablet();
+
+
+//CHECK FOR COOKIES
+      window.CookiesEnabled = cookies.areCookiesEnabled();
+
+//CHECK FOR LOCALSTORAGE
+      window.storageEnabled = (function(){
+        var test = 'test';
+        try {
+          localStorage.setItem(test, test);
+          localStorage.removeItem(test);
+          return true;
+        } catch(e) {
+          return false;
+        }
+      })();
+
+//GET COOKIES OR URL PARAMS TO SET THE INITIAL STREAMS BEING WATCHED. GET USERNAME
+      window.UrlParams = window.parseURL();
+//GET USERNAME
+      window.Username = cookies.getCookie('username') || '';
+
+
+//CROSS BROWSER SCROLL PANE CUSTOMISATION
+    	$('.scroll-pane').jScrollPane({
+    		showArrows: true,
+    		arrowScrollOnHover: true,
+    		// horizontalGutter: 30,
+    		// verticalGutter: 30
+    	});
+      // // Add some content to #pane2
+      // var pane2api = $('#pane2').data('jsp');
+      // var originalContent = pane2api.getContentPane().html();
+      // pane2api.getContentPane().html(originalContent + originalContent + originalContent);
+      //
+      // // Reinitialise the #pane2 scrollpane
+      // pane2api.reinitialise();
+
+
+//TOOLTIP INIT FOR BOOTSTRAP
+      $('[data-toggle="tooltip"]').tooltip();
+
+//SET RECENT STREAMS VARIABLE
+      window.RecentStreams = [];
+      	if(storageEnabled){
+      			if (!(localStorage.RecentStreams)) localStorage.RecentStreams = '';
+      			RecentStreams = localStorage.RecentStreams.split(",");   //contains recent streams that were watched
+      			if (RecentStreams[0] === '') RecentStreams = [];
+      	}
+      	else RecentStreams = [];
+
+
+
+//CLICK PROPAGATION
+    //filter and settings windows won't close when you click the buttons
+    $(".toggleableFilter").click(function(e) {
+    		 e.stopPropagation();
+    });
+    $(".toggleableSetting").click(function(e) {
+    		e.stopPropagation();
+    });
+      //filter and settings windows won't close when you type input into the inputs
+    $('#game').keypress(function(e){
+    	e.stopPropagation();
+    })
+    $('#streamer').keypress(function(e){
+    	e.stopPropagation();
+    })
+    $('#Username').keypress(function(e){
+    	e.stopPropagation();
+    })
+
+
+}
+
+module.exports= init;
+
+},{}],6:[function(require,module,exports){
+//SETUP KEYBOARD KEYPRESS LISTENERS
+function setupKeyListeners(){
+
+  $("html").keypress(function( event ) {
+    var player = $("#twitch_embed_player_"+SelectedStream)[0];
+
+  //HIDING LIST
+//hiding list is done in renderStreams, as per the requirement to be dynamic
+
+
+      //WHEN IN SINGLE STREAM MODE THIS WILL SWITCH TO THE STREAM NUMBER PRESSED
+    switch(event.which){
+
+        //SELECTS STREAM (1,2,3,4)
+      case 49: case 50: case 51: case 52: case 53: case 54: case 55: case 56:
+          for (var i=0;i<4;i++){
+            if ( event.which == i+49 ) {
+               event.preventDefault();
+               window.ChangingSingleStreams=true;
+                if(window.NumStreams==1 && i!==window.SelectedStream){
+                  window.SingleStreamSelectorOffset=i;
+                  window.renderStreams();
+                    for (var c=0;c<4;c++){
+                    $('#chat'+c).hide();
+                    }
+                    window.ActiveChat=i;
+                    $('#chat'+window.ActiveChat).show();
+                  window.SingleStreamSelectorOffset=0;
+                  window.SelectedStream=i;
+                }
+            else window.changeSelectedStream(i);
+            break;
+          }
+            //SELECTS THE CHAT (5,6,7,8)
+          if ( event.which == i+53 ) {
+             event.preventDefault();
+             window.ActiveChat=i;
+             for (c=0;c<4;c++){
+             $('#chat'+c).hide();
+             }
+             $('#chat'+window.ActiveChat).show();
+             break;
+           }
+          }
+        break;
+
+      //PAUSING, MUTING, UNMUTING (space,t,u)
+      case 32:
+        event.preventDefault();
+        if (player.isPaused()) player.playVideo();
+        else player.pauseVideo();
+        break;
+      case 116:
+        player.mute();
+        break;
+      case 117:
+        player.unmute();
+        break;
+
+
+        //SET STREAM QUALITY
+      case 108:
+        player.setQuality('Low');
+        break;
+      case 109:
+        player.setQuality('Medium');
+        break;
+      case 104:
+        player.setQuality('High');
+        break;
+      case 115:
+        player.setQuality('Source');
+        break;
+
+
+        //CHANGE NUMBER OF DISPLAYED STREAMS
+      case 122:   //z
+          if (window.NumStreams!==1){
+            if (window.SelectedStream!==0){
+              window.SingleStreamSelectorOffset = window.SelectedStream;
+            }
+            window.changeSelectedStream(SelectedStream);
+          window.ActiveChat = window.SelectedStream;
+            for (c=0;c<window.NumStreams;c++){
+            $('#chat'+c).hide();
+            }
+            $('#chat'+window.ActiveChat).show();
+
+          window.NumStreams=1;
+          window.renderStreams();
+          window.SingleStreamSelectorOffset=0;
+            }
+          break;
+
+      case 120:   //x
+          if(window.NumStreams==2){
+            if (window.DivideStreams=='horizontal') window.DivideStreams='vertical';
+            else window.DivideStreams='horizontal';
+          } else NumStreams=2;
+          window.renderStreams();
+          break;
+
+      case 99:   //c
+          // if (NumStreams!==4){
+          window.NumStreams=4;
+          window.renderStreams();
+          //  }
+          break;
+
+      };
+ });
+}
+
+module.exports= setupKeyListeners;
+
+},{}],7:[function(require,module,exports){
+class listManager{
+
+  //ADD MORE STUFF TO THE LIST WHEN THE SCROLLBAR REACHES THE BOTTOM
+  constructor(){
+
+    this.BASE_TWITCH_REQUEST_URL= 'https://api.twitch.tv/kraken/streams?';
+
+    this.CListRefreshTimeMinutes
+    this.CNumListedStreamsStart = 0;
+    this.CNumListedStreamsEnd = 25;
+    this.CListRefreshTimeMinutes = cookies.getCookie("ListRefreshTimeMinutes") || 60;
+
+    this.NumListedStreamsStart = 0;
+    this.NumListedStreamsEnd = 25;
+
+    this.FilteringListStaticCounter = 0;
+    this.ListStaticCounter=0;            //used when accessing the list renderer multiple times for when multiple concurrent ajax requests resolve
+
+    this.FavIndexL=this.CNumListedStreamsStart;		//THESE ARE STATIC VARIABLES TO HOLD THE LIST NUMBER DURING ADDING OF FAVORITE STREAMS (SINCE SOME MIGHT BE OFFLINE WE NEED A SEPARATE LIST TRACKER)
+    this.FavIndexH=this.CNumListedStreamsEnd;
+    this.RecIndexL=this.CNumListedStreamsStart;
+    this.RecIndexH=this.CNumListedStreamsEnd;
+
+    this.ListAddCooldown=false;
+
+    this.NoListLockout = true;
+
+    this.List={};
+  }
+
+
+// SETUP OF THE STREAM LIST VIEW WITH CLICK LISTENERS
+  populateList (reqURL, refreshingList){
+      //PREVENTS OTHER LIST EVENTS FROM BEING FIRED SO THAT MULTIPLE SETS OF AJAX REQUESTS DON'T COINCIDE
+      this.NoListLockout=false;
+
+      if(refreshingList) this.flushNumListedStreams();
+
+        var that= this;
+      $.getJSON(this.BASE_TWITCH_REQUEST_URL+'offset='+this.NumListedStreamsStart+'&limit='+this.NumListedStreamsEnd+'&callback=?', function(result){   //the ? for the callback name signals jQuery that it is a JSONP request and not a JSON request. jQuery registers and calls the callback function automatically.
+          //response data are now in the result variable
+      //  var jsonString = JSON.stringify(result);
+      //  var result = JSON.parse(result);
+       that.listLoader(result, refreshingList, refreshingList, that.NumListedStreamsEnd);
+      });
+    }
+
+//LOAD THE STREAMS LIST ON THE LEFT
+//YOU'RE EITHER REFRESHING THE LIST OR ADDING TO THE LIST
+
+//YOU PASS IN A DIFFERENT LIST EVERY TIME, SO YOU ONLY NEED TO KEEP A STATIC COUNTER TO KEEP THE INDEX POSITION WHILE FILTERING
+//WHEN USING LISTLOADER ON ITS OWN, YOU NEED TO USE flushNumListedStreams() TO CLEAR THE VALUE OF this.NumListedStreamsStart...
+//NOTE listLoader HAS NO TOLERANCE FOR EMPTY LIST ENTRIES (ABORTS FUNCTION ON SIGHT), AND REQUIRES YOU TO KEEP THE
+//START AND FINISH LIST PUSH POSITIONS YOURSELF IF YOU ARE MAKING MULTIPLE CALLS TO IT...
+//changingCat IS FOR WHEN YOU CLICK A NEW CATEGORY BUTTON, IT WILL RUN ONCE WITHOUT FILTERING TO POPULATE List, AND THEN ONCE WITH
+//TO RENDER THE LIST PROPERLY FILTERED
+  listLoader(list, refreshingList,changingCat, streamIteratorEnd) {
+
+        var filtering=false;
+        var tempList = list;
+
+          //CHECK THE FILTER DOM ELEMENTS TO SEE IF FILTERING IS ON; IF IT IS THEN DO THE FILTERING AND SET filtering TO TRUE
+          //SO THE BEHAVIOR OF THE LISTLOADING CAN BE MODIFIED
+
+
+              var temp = $filterList.find('.activeFilter');
+              var _this = this;
+          temp.each(function(){
+            var id = $(this).next('span').find('input').attr('id');
+            if (id==='streamer') {
+              tempList = _this.filterByStreamer(tempList);
+              filtering=true;
+            }
+            if (id==='game') {
+              tempList = _this.filterByGame(tempList);
+              filtering=true;
+            }
+          });
+
+
+        //MODIFY LISTLOADER BEHAVIOR IF REFRESHING OR FILTERING. THESE VARIABLES AFFECT HOW THE PASSED IN list IS ADDED TO
+        //THE $list DOM ELEMENT
+    if (refreshingList){
+      $list.html('');
+      this.FilteringListStaticCounter=0;
+      if(filtering==false || changingCat){
+        this.List = list;
+        this.ListStaticCounter=0;
+      }
+    } else this.List.streams = this.List.streams.concat(list.streams);
+
+    if (filtering) list = tempList;  //else just use list
+
+
+
+        var c=0;
+     for (var i=this.NumListedStreamsStart;i<streamIteratorEnd;i++){
+
+       if (list.streams[i-this.NumListedStreamsStart]==null || list.streams[i-this.NumListedStreamsStart]=='' ||
+           list.streams[i-this.NumListedStreamsStart]=={}) break;
+
+       if(filtering==false) {c=this.ListStaticCounter;}
+       else {c=this.FilteringListStaticCounter}
+
+       if (CHideGame) var hg = 'display:none;';
+       else var hg = '';
+       if (CHideDesc) var hd = 'display:none;';
+       else var hd = '';
+          $list.append('<li style="position: relative; top:0; width: 100% !important;" class="Pic'+c+' listHoverClass">'+
+                               '<img style="width:100%;" class="streamPic" src="'+list.streams[i-this.NumListedStreamsStart].preview.medium+'">'+
+                                '<div class="listStreamName" style="width: 100%; height:100%;">'+
+                                  '<div style="height: auto;" class="strokeme wordwrap"><b>'+list.streams[i-this.NumListedStreamsStart].channel.name+'</b> - <span style="font-size: 75%; float: right:">'+list.streams[i-this.NumListedStreamsStart].viewers+'</span></div>'+
+                                  '<div style="height: auto; font-size: 85%; '+hg+'" id="gameName" class="listHidden strokeme wordwrap"><i>'+list.streams[i-this.NumListedStreamsStart].game+'</i></div>'+
+                                  '<div style="height: auto; position:absolute; bottom:0; '+hd+'" id="gameStatus" class="listHidden strokeme wordwrap"><span style="font-size: 85%;">'+list.streams[i-this.NumListedStreamsStart].channel.status+'</span></div>'+
+                               '</div>'+
+                        '</li>'
+                      );
+
+             $('.listHoverClass').hover(
+               function(){$(this).find('.listHidden').show();},
+               function(){if(CHideGame) $(this).find('#gameName').hide();
+                          if(CHideDesc) $(this).find('#gameStatus').hide();
+               }
+             );
+          $('.listStreamName').css({bottom: 0, position:'absolute', width: '100%'})
+
+          if(window.FirstTimeRenderingStreams){
+            window.renderStreams();
+          }
+              //ADD THE LISTENERS TO RENDER THE STREAMS
+          $('.Pic'+c).click(loadNewStream(list.streams[i-this.NumListedStreamsStart].channel.name));  //RENDERS ALL THE STREAMS
+
+          if(filtering==false) this.ListStaticCounter++;
+          else this.FilteringListStaticCounter++;
+
+          this.NoListLockout=true;   //RELINQUISH LOCK
+      };
+    };
+
+
+//RESETS THE STREAM COUNTER FOR THE LIST TO BEGIN ANEW
+	flushNumListedStreams(){
+	  this.NumListedStreamsEnd= this.CNumListedStreamsEnd;
+		this.NumListedStreamsStart= this.CNumListedStreamsStart;
+	}
+
+
+
+  controlListScroll(){
+
+              var _this= this;
+      $(".colList ul").scroll(function() {
+        if($(document).scrollTop() == 0 && _this.NumListedStreamsEnd<251 && _this.ListAddCooldown==false) {
+          if ($('#topStreams').hasClass('activeButton')) {
+            _this.NumListedStreamsEnd+=25;
+            _this.NumListedStreamsStart+=25;
+            _this.addToTopStreams(false);
+          }
+          if ($('#favStreams').hasClass('activeButton')){
+            _this.addToFavStreams('',false);
+          }
+          if ($('#recStreams').hasClass('activeButton')) {
+            _this.NumListedStreamsEnd+=25;
+            _this.NumListedStreamsStart+=25;
+            _this.addToRecStreams(false);
+          }
+
+
+          _this.ListAddCooldown=true;
+          _this.addListTimer=setInterval(addListReset, 1500);
+        };
+      });
+
+          //REFRESH THE LIST EVERY MINUTE
+          //TODO BROKEN, NEEDS TO BE CUSTOMIZED TO THE SELECTED LISTBAR ITEM
+    _this.refreshListInterval=setInterval(_this.populateList(_this.BASE_TWITCH_REQUEST_URL,true), _this.CListRefreshTimeMinutes*60000);
+
+    function addListReset(){
+      _this.ListAddCooldown=false;
+      clearInterval(_this.addListTimer);
+    }
+  }
+
+
+
+
+//FILTERING
+	filterByStreamer(streams){
+	  var newList = {streams:[]};
+	  var streamer = $('#streamer').val();
+
+	  for (var i=0;i<streams.streams.length;i++){
+			var regexp = new RegExp(streamer, "i");
+	    if((streams.streams[i].channel.name).search(regexp) > -1){
+	      newList.streams.push(streams.streams[i]);
+	    }
+	  }
+		console.log('newList');
+		console.log(newList);
+	  return newList;
+	}
+
+
+	filterByGame(streams){
+		console.log("streams");
+		console.log(streams);
+	  var newList = {'streams':[]};
+	  var game = $('#game').val();
+		var regexp = new RegExp(game, "i");
+
+	  for (var i=0;i<streams.streams.length;i++){
+	    if((streams.streams[i].game).search(regexp) > -1){
+	      newList.streams.push(streams.streams[i]);
+	    }
+	  }
+	  return newList;
+	}
+
+
+
+
+  addToRecStreams(refreshing){
+
+    this.NoListLockout=false;
+        if(refreshing) {
+          this.flushNumListedStreams();
+          this.NumListedStreamsEnd=0;
+          this.RecIndexL=this.CNumListedStreamsStart;
+          this.RecIndexH=this.CNumListedStreamsEnd;
+        }
+
+
+        //THIS BLOCK TRIES TO FIND AT LEAST ONE LIVE STREAM FROM YOUR LIST, UP TO A MAX OF 4 API HITS
+      var length = 0;
+      var lc = 0;
+      var _this=this;
+      loop(_this);
+
+      function loop(_this){
+
+
+        var qString = RecentStreams.slice(_this.RecIndexL,_this.RecIndexH).toString();
+        console.log('qString');
+        console.log(qString);
+
+              if (lc == 4 || qString=='' || qString==null) {_this.NoListLockout=true; return;}
+              lc++;
+
+        $.getJSON('https://api.twitch.tv/kraken/streams?channel='+qString+'&callback=?')
+        .done(function(recent){
+          // Favorites.push(favorites);		//SET THE GLOBAL FAVORITES TO THE RESULT
+          console.log('addToRecStreams recent:');
+          console.log(recent);
+            _this.NumListedStreamsEnd+=recent.streams.length;
+            _this.listLoader(recent,refreshing,false,_this.NumListedStreamsEnd);
+            _this.NumListedStreamsStart+=recent.streams.length;
+            _this.RecIndexL+=_this.CNumListedStreamsEnd;
+            _this.RecIndexH+=_this.CNumListedStreamsEnd;
+            refreshing = false;
+            length += recent.streams.length;
+            if (length < 1)  loop(_this);
+            else {lc=4; _this.NoListLockout=true;}
+        })
+      }
+
+  }
+
+  addToTopStreams(refreshing){
+    if(this.NoListLockout){
+      this.NoListLockout=false;
+        this.populateList(this.BASE_TWITCH_REQUEST_URL, refreshing);
+      this.NoListLockout=true;
+    }
+  }
+
+
+  addToFavStreams(value, refreshing){
+		if(value!=''  && value!=null && typeof(value)!='undefined') SortedFavoritesString = value;
+
+console.log('Sorted favorites string:');
+console.log(SortedFavoritesString);
+
+		list.NoListLockout=false;
+				if(refreshing) {
+					list.flushNumListedStreams();
+					list.NumListedStreamsEnd=list.CNumListedStreamsEnd;
+					list.FavIndexL=list.CNumListedStreamsStart;
+					list.FavIndexH=list.CNumListedStreamsEnd;
+				}
+
+					//ONLY USE A SUBSET OF Favorites TO QUERY
+					//HAVE TO CHOP SOME ELEMENTS OFF OF FavoritesString. SO TURN INTO AN ARRAY, SLICE IT, THEN STRINGIFY IT AGAIN
+			var res = SortedFavoritesString.split(',');
+console.log('making requests in loop to add to favorites');
+
+
+        //TRIES TO FIND AT LEAST ONE LIVE FAVORITED STREAM, UP TO A MAX OF 4 API HITS
+			var length = 0;
+			var lc = 0;
+			loop();
+
+			function loop(){
+
+				var qString = res.slice(list.FavIndexL,list.FavIndexH).toString();
+console.log('qString');
+console.log(qString);
+
+							if (lc == 4 || qString=='' || qString==null) {list.NoListLockout=true; return;}
+							lc++;
+
+				$.getJSON('https://api.twitch.tv/kraken/streams?channel='+qString+'&callback=?')
+				.done(function(favorites){
+					// Favorites.push(favorites);		//SET THE GLOBAL FAVORITES TO THE RESULT
+					console.log('addToFavStreams favorites:');
+					console.log(favorites);
+					  list.NumListedStreamsEnd+=favorites.streams.length;
+						list.listLoader(favorites,refreshing,false,list.NumListedStreamsEnd);
+						list.NumListedStreamsStart+=favorites.streams.length;
+						list.FavIndexL+=list.CNumListedStreamsEnd;
+						list.FavIndexH+=list.CNumListedStreamsEnd;
+						refreshing = false;
+						length += favorites.streams.length;
+						if (length < 1)  loop();
+						else {lc=4; list.NoListLockout=true;}
+				})
+			}
+
+	}
+
+}
+
+
+module.exports= listManager;
+
+},{}],8:[function(require,module,exports){
+class detectMobile{
+
+//check for mobile based on CSS PIXEL SIZE
+		detectmobBySize() {
+		   if(window.innerWidth <= 800 && window.innerHeight <= 600) {
+		     return true;
+		   } else {
+		     return false;
+		   }
+		}
+
+//check for on mobile USING A REALLY BIG RegExp
+	mobile() {
+	  var check = false;
+	  (function(a){
+			if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4)))
+				check = true
+		 })(navigator.userAgent||navigator.vendor||window.opera);
+	  return check;
+	}
+//check for mobile or tablet USING A REALLY BIG RegExp
+	mobileOrTablet() {
+	  var check = false;
+	  (function(a){
+				if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino|android|ipad|playbook|silk/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4)))
+					check = true
+			})(navigator.userAgent||navigator.vendor||window.opera);
+	  return check;
+	}
+
+
+	//add |android|ipad|playbook|silk to include these as well (not in there by default)
+	//another way to detect mobile (not super reliable)
+	detectmobByNavigator() {
+	 if( navigator.userAgent.match(/Android/i)
+	 || navigator.userAgent.match(/webOS/i)
+	 || navigator.userAgent.match(/iPhone/i)
+	 || navigator.userAgent.match(/iPad/i)
+	 || navigator.userAgent.match(/iPod/i)
+	 || navigator.userAgent.match(/BlackBerry/i)
+	 || navigator.userAgent.match(/Windows Phone/i)
+	 ){
+	    return true;
+	  }
+	 else {
+	    return false;
+	  }
+	}
+
+}
+
+module.exports= detectMobile;
+
+},{}],9:[function(require,module,exports){
+//PARSES THE URL PARAMETERS AND RETURNS EACH OF THEM AS ELEMENTS IN A RETURN ARRAY (query_string)
+  function ParseURL () {
+
+    var query_string = [];
+    var query = window.location.href;
+    var pre = query.split(/index\.html#?\/?/);
+    if (!(pre)) pre = query;
+    window.URL=pre[0]+'index.html#/';
+      if(pre[1]) var vars = pre[1].split("/");
+      else var vars='';
+    for (var i=0;i<vars.length;i++) {
+        var temp = decodeURIComponent(vars[i]);
+        if (temp) query_string[i] = temp;   //doesn't terminate at empty entries, ie: / /
+      }
+      return query_string;
+  }
+
+  module.exports= ParseURL;
+
+},{}],10:[function(require,module,exports){
+   //RENDERS THE STREAM COLUMN
+function renderStreams(){
+    // $collapseList.parent().css({position: 'relative'});   //NEED THIS FOR ABSOLUTE LINK POSITIONING. IFRAME HAS THE SAME PARENT
+    // $streams.css({position: 'relative'});
+
+    showStreamsLoadScreen();  //erases streams html and shows a loading screen
+    var html = '';
+
+
+  switch (NumStreams){
+    case 1:
+				if (window.Flash_Installed  && !window.isMobile) html = html+'<div id="twitch_embed_player_0"></div>';
+				else html = html+'<span class="stream0" style="width: 100%; height:100%;"><iframe src="http://www.twitch.tv/'+WatchingStreams[0]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe><param name="menu" value="false" /></span>';
+        break;
+    case 2:
+       if (DivideStreams=='horizontal'){
+				if (window.Flash_Installed  && !window.isMobile){
+					html = html+'<div style="height: 100%; width: 100%;"><table style="height: 100%; width: 100%;" id="streamTable" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td><div id="twitch_embed_player_0"></div></td>';
+	        html = html+'<td><div id="twitch_embed_player_1"></div></td></tr><tbody></table></div>';
+				}
+        else{
+					html = html+'<div style="height: 100%; width: 100%;"><table style="height: 100%; width: 100%;" id="streamTable" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="stream0"><iframe src="http://www.twitch.tv/'+WatchingStreams[0]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe></td>';
+					html = html+'<td class="stream1"><iframe src="http://www.twitch.tv/'+WatchingStreams[1]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe></td></tr><tbody></table></div>';
+				}
+       }
+       else if (DivideStreams=='vertical'){
+				 if (window.Flash_Installed  && !window.isMobile){
+         html = html+'<div style="height: 100%; width: 100%;"><table style="height: 100%; width: 100%;" id="streamTable" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td><div id="twitch_embed_player_0"></div></td></tr>';
+         html = html+'<tr><td><div id="twitch_embed_player_1"></div></td></tr></tbody></table></div>';
+       }
+			 else{
+				 html = html+'<div style="height: 100%; width: 100%;"><table style="height: 100%; width: 100%;" id="streamTable" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="stream0"><iframe src="http://www.twitch.tv/'+WatchingStreams[0]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe></td></tr>';
+         html = html+'<tr><td class="stream1"><iframe src="http://www.twitch.tv/'+WatchingStreams[1]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe></td></tr></tbody></table></div>';
+			 }
+		 }
+        break;
+    case 4:
+			if(window.Flash_Installed  && !window.isMobile){
+        html = html+'<table  style="height: 100%; width: 100%;" id="streamTable" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td><div id="twitch_embed_player_0"></div></td>';
+        html = html+'<td><div id="twitch_embed_player_1"></div></td></tr>';
+        html = html+'<tr><td><div id="twitch_embed_player_2"></div></td>';
+        html = html+'<td><div id="twitch_embed_player_3"></div></td></tr></tbody></table>';
+			}
+			else{
+				html = html+'<table  style="height: 100%; width: 100%;" id="streamTable" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="stream0"><iframe src="http://www.twitch.tv/'+WatchingStreams[0]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe></td>';
+        html = html+'<td class="stream1"><iframe src="http://www.twitch.tv/'+WatchingStreams[1]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe></td></tr>';
+        html = html+'<tr><td class="stream2"><iframe src="http://www.twitch.tv/'+WatchingStreams[2]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe></td>';
+        html = html+'<td class="stream3"><iframe src="http://www.twitch.tv/'+WatchingStreams[3]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe></td></tr></tbody></table>';
+			}
+        break;
+  }
+
+
+//ICONS TO TOGGLE SIDE PANEL
+    html = html + '<a href="#" class="collapse collapseList" style="display: none;" data-toggle="tooltip" data-placement="bottom" title="Collapse Streams List"><i class="fa fa-2x fa-caret-left"></i></a>'+
+                      '<a href="#" class="collapse collapseChat" style="display: none;" data-toggle="tooltip" data-placement="bottom" title="Collapse Chat"><i class="fa fa-2x fa-caret-right"></i></a>';
+
+//MAKE TOGGLE ICONS BIGGER FOR SMALLER DEVICES
+    if (window.isMobile) {
+      $('.fa-caret-right').addClass('fa-4x');
+      $('.fa-caret-left').addClass('fa-4x');
+    }
+
+
+//HIDE STREAMS UNTIL THEY ARE ALL LOADED (NEED THEM IN THE DOM TO CREATE THE LISTENERS FOR WHEN THEY LOAD)
+    var temp = '<div style="height:100%;" id="loadingDivShow" class="divShowHandle" style="visibility: hidden;">'
+                 +html+
+                      '<div id="selectedStreamPopup" style="position: absolute; top: 0; right: 50%; width: 8%; display: none; color: white; z-index:2;">'+
+                        '<i class="fa fa-2x fa-television" style="color: white;"></i><span></span>'+
+                      '</div>'
+               '</div>';
+    $streams.html(temp);
+
+
+
+    $selectedStreamPopup = $('#selectedStreamPopup');
+
+//TWITCH PLAYER API
+  for (var i=0; i<NumStreams; i++){
+
+    var c=i+SingleStreamSelectorOffset;   //THIS IS TO RENDER STREAMS IN SINGLE-STREAM-MODE BASED ON NUMBER PRESSED
+
+ //USE SHOCKWAVE FLASH PLUGIN FOR NON MOBILE
+		if(window.Flash_Installed && !window.isMobile){
+		    window['onPlayerEvent'+i] = function (data) {
+		      data.forEach(function(event) {
+		        if (event.event == "playerInit") {    //could also use videoPlaying or playerInit
+
+		            $('#loadingDivShow').removeAttr('id');
+		            $('.divShowHandle').attr("id","loadingDivShowFinal");
+		            $('.loadingDivHide').hide();
+
+		            if (ChangingSingleStreams) {
+		              changeSelectedStream(c);
+		              ChangingSingleStreams=false;
+		            }
+		            else changeSelectedStream(0);
+		        }
+		      });
+		    }
+
+		    swfobject.embedSWF("http://www-cdn.jtvnw.net/swflibs/TwitchPlayer.swf", "twitch_embed_player_"+i, "100%", "100%", "11", null,
+		      { "eventsCallback":"onPlayerEvent"+i,
+		        "embed":1,
+		        "channel": WatchingStreams[c],
+		        "auto_play":"true"},
+		      { "allowScriptAccess":"always",
+		        "allowFullScreen":"true"});
+
+		  }
+
+ //MOBILE VIDEO CLIENT (NO FLASH)
+		// else{
+		// 		$('#loadingDivShow').removeAttr('id');
+		// 		$('.divShowHandle').attr("id","loadingDivShowFinal");
+		// 		$('.loadingDivHide').hide();
+    //
+		// 		if (ChangingSingleStreams) {
+		// 			changeSelectedStream(c);
+		// 			ChangingSingleStreams=false;
+		// 		}
+		// 		else changeSelectedStream(0);
+    //
+		// 		$('.stream'+i).html('<iframe src="http://www.twitch.tv/'+WatchingStreams[c]+'" frameborder="0" scrolling="no"'+
+    //                         +'height="100%" width="100%"></iframe><param name="menu" value="false" />');
+		// }
+
+  }
+
+
+//APPENDING FUNCTIONS AFTER RENDERING THE STREAMS
+  //ALLOWS STREAM COLUMN RESIZE
+    cResizer.ResetStreamColumnDrag();
+  //SET UP LISTENERS FOR CHAT AND LIST TOGGLERS
+    _setupColumnCollapseListeners();
+
+    _preventRedirect();
+
+
+//DO ALL OF THIS ONLY IF THE PAGE IS LOADING (NOT IF ALREADY LOADED)
+  if(FirstTimeRenderingStreams){
+    FirstTimeRenderingStreams=false;
+  //FILL UP CHAT AND DISPLAY THE ACTIVE ONE
+    _renderChatHtml();
+
+  //SETUP THE KEYPRESS LISTENER FOR HIDING LIST AND CHAT. THIS NEEDS TO BE HERE AND NOT ANYWHERE ELSE.
+      $("html").keypress(function( event ) {
+        switch(event.which){
+          case 97:
+            _toggleList();
+            break;
+          case 100:
+            _toggleChat();
+            break;
+        }
+      });
+
+    }
+
+
+
+//INNER FUNCTIONS
+
+        function _renderChatHtml(){
+          var html = '';
+             for(var c=0; c<4; c++){
+               html += '<div id="chat'+c+'" style="display: none; height: 100vh; width: 100%;"><iframe class="asdf" style="z-index: 5;"'+
+                        'src="http://www.twitch.tv/'+WatchingStreams[c]+'/chat" frameborder="0" scrolling="no" id="chat_embed"'+
+                        'height="100%" width="100%"></iframe></div>';
+             }
+            $chat.html('');
+            $chat.html(html);
+            $('#chat'+ActiveChat).show();
+        }
+
+    //STILL FIDDLING WITH THIS. RIP.
+        function _preventRedirect(){
+          for(var i=0;i<NumStreams;i++){
+            $('#twitch_embed_player_'+i).find("param[name='allowScriptAccess']").attr('value','sameDomain');
+          }
+        }
+
+        function _setupColumnCollapseListeners(){
+             //CACHE THE DOM FOR TOGGLERS
+          var $collapseList = $(".collapseList");
+          var $collapseChat = $('.collapseChat');
+
+
+          if(window.isMobile){
+              _toggleChat();
+              $collapseList.show();
+              $collapseChat.show();
+              window.$list.click(_toggleList);
+          }
+          else{
+              $streams.hover(function(){
+                $collapseList.show();
+                $collapseChat.show();
+              });
+              $chat.hover(function(){
+                $collapseList.fadeOut( 200 );
+                $collapseChat.fadeOut( 200 );
+              });
+              $colList.hover(function(){
+                $collapseList.fadeOut( 200 );
+                $collapseChat.fadeOut( 200 );
+              });
+          }
+
+
+            if($colList.width() > 100 && $colList.width() < 1000) window.lw = $colList.width();
+            else window.lw = 500;    //fallback value if list size gets crunched
+            $collapseList.parent().css({position: 'relative'});    //need this to do absolute link positioning
+            if (ListIsHidden){
+              $collapseList.css({top: 0, left: 0, position:'absolute', 'z-index': 2});
+            }
+            else {
+              $collapseList.css({top: 0, left: lw, position:'absolute', 'z-index': 2});
+            }
+          $collapseList.click(_toggleList);
+
+
+          $collapseChat.css({top: 0, right: 0, position:'absolute', 'z-index': 2});
+          $collapseChat.click(_toggleChat);
+
+        }
+
+//TOGGLE LIST AND TOGGLE CHAT
+          function _toggleList(){
+            var $collapseList = $(".collapseList");
+            var $collapseChat = $('.collapseChat');
+
+            $colList.toggle();
+              //NEED THIS CAUSE LIST IS FLOATING
+            if (ListIsHidden){
+              ListIsHidden=false;
+              $collapseList.css({top: 0, left: $colList.width(), position:'absolute', 'z-index': 2});
+            }
+            else {
+              ListIsHidden=true;
+              $collapseList.css({top: 0, left: 0, position:'absolute', 'z-index': 2});
+            }
+          }
+
+          function _toggleChat(){
+            var $collapseList = $(".collapseList");
+            var $collapseChat = $('.collapseChat');
+
+            $chat.toggle();
+            $collapseChat.css({top: 0, right: 0, position:'absolute', 'z-index': 2});
+            cResizer.ResetStreamColumnDrag();
+          }
+
+
+          // function _putStreamsInTabList(){
+          //   for (i=0;i<NumStreams;i++){
+          //     $('#Stream'+i).val(WatchingStreams[i]);
+          //     $('#delStream'+i).off('click');
+          //     $('#delStream'+i).click(function(){
+          //       $('#Stream'+i).val('');
+          //       WatchingStreams[i]='';
+          //     });
+          //   }
+          // }
+
+
+};
+
+module.exports= renderStreams;
+
+},{}],11:[function(require,module,exports){
+function setStreamListButtonListeners(){
+
+  //TOP STREAMS
+    $('#topStreams').click(function(){
+
+      if (!($(this).hasClass('activeButton'))){
+        $('.activeButton').removeClass('activeButton');
+        $(this).addClass('activeButton');
+        list.addToTopStreams(true);
+      }
+    });
+
+
+  //RECENT STREAMS
+  $('#recStreams').click(function(){
+
+    if(list.NoListLockout){
+      if (!($(this).hasClass('activeButton'))){
+        $('.activeButton').removeClass('activeButton');
+        $(this).addClass('activeButton');
+            list.NoListLockout=false;
+
+          list.addToRecStreams(true);
+
+      }
+    }
+  });
+
+
+
+
+  //FAVORITE STREAMS
+  //we only hit the Twitch API for a refresh of favorited streams every couple hours when the app is running, and only request ~25 images per request...
+  //cookies are set to control the API hits for the full list of favorites (which could be hundreds of entries) to every couple of hours when running, and every
+  //few days when not running. It then sorts the full list by viewers and saves into Favorites[]. We then only use subsets of this array to populate the list...
+  //the reson that the entire Favorites array isnt used to populate the list is to reduce API requests for images...
+  //imagine making requests for hundreds of medium sized images every few minutes per client...
+  $('#favStreams').click(function(){
+
+    if (!($(this).hasClass('activeButton'))){
+        //CHECK IF USERNAME IS SET
+      if(window.Username!='' && window.Username!=null){
+            console.log('Using as '+window.Username);
+        } else {
+            var user = prompt("Enter your Twitch username to use the favorites tab:", "");
+            if (user != "" && user != null) {
+                cookies.setCookie("username", user, 365);
+                window.Username = user;
+            } else {
+                    return
+              }
+          }
+
+
+      if(list.NoListLockout){
+        list.NoListLockout=false;
+            $('.activeButton').removeClass('activeButton');
+            $(this).addClass('activeButton');
+
+            //HAVE TO DO TWO AJAX REQUESTS, BECAUSE THE "FOLLOWS" RESPONSE FROM THE TWITCH API DOESENT GIVE YOU THE PROPER
+            //DATA NEEDED TO POPULATE THE STREAMS LIST
+
+            //IF THE SESSION COOKIE FOR THE FavoritesString IS EXPIRED, HIT THE API WITH THE FavoritesString TO REFRESH VIEWERCOUNT,
+            //THEN SORT BY VIEWER COUNT AND RESET FavoritesString AND THE LOCAL STORAGE COPY TO REFLECT THAT SORTING. THEN HIT THE
+            //API FOR THE STREAM DATA ON THE TOP 25 (if you havent changed the number) STREAMS FROM THAT FavoritesString.
+            if(storageEnabled && cookies.CookiesEnabled) {
+
+              if(typeof (localStorage.FavoritesString) == 'undefined' || localStorage.FavoritesString == null || localStorage.FavoritesString=='' ||
+                  localStorage.SortedFavoritesString == null || typeof (localStorage.SortedFavoritesString) == 'undefined'|| localStorage.SortedFavoritesString=='' ||
+                  cookies.getCookie('FRefreshSession') == null || cookies.getCookie('FRefreshSession')==''){
+
+                    console.log('refreshed Favorites');
+                    cookies.setCookie("FRefreshSession", true, 0.1);
+
+                    window.deferred1 = $.Deferred();
+                    window.deferred2 = $.Deferred();
+                      //SETS FavoritesString. DOESN'T UPDATE THE LOCAL STORAGE IF THE FAVORITES LIST IS NOT EXPIRED
+                    window.refreshFavoritesString(false);      //refresh the list if it's gone expired (3 days default) during the session
+
+                      //USES FavoritesString TO SORT BY VIEWERS, THEN SETS SortedFavoritesString BASED OFF THAT ORDERING.
+                      //DOES NOTHING IF THE CURRENT SORTED LIST ISNT EXPIRED
+                    window.deferred1.done(function(value){window.getFavStreamsAndSort(value)});     //hit the API for all favorited streams, then sort them and set the string to reflect that
+                    window.deferred2.done(function(value){list.addToFavStreams(value,true)});
+              } else {
+                console.log(cookies.getCookie('FRefreshSession'));
+                console.log('didnt refresh anything');
+                window.FavoritesString = localStorage.FavoritesString;
+                window.SortedFavoritesString = localStorage.SortedFavoritesString;
+                list.addToFavStreams('',true);     //use a sub-array of FavoritesString  (25 entries if you havent modified the global for list refresh increment) to populate the list.
+              }
+
+          }
+      }
+    }
+  });
+
+
+
+//FILTER STREAMS
+//GIVES THE FILTER FIELD CHECKED AN activeFilter CLASS SO THAT LISTLOADER CAN USE THIS CLASS TO CHOOSE WHAT FILTERING FUNCTIONS TO RUN
+  $filterList.find('.toggleableFilter i, .toggleableFilter span, .toggleableFilter span input').click(function(event){
+
+        if ($(this).prop("tagName") === 'INPUT') {
+          event.stopPropagation();
+          return;
+        }
+
+          //CLICKED RED CHECKMARK
+        if ($(this).hasClass('activeFilter')) {
+          $(this).removeClass('activeFilter');
+          $(this).next('span').find('input').off('input');
+          list.flushNumListedStreams();
+          list.listLoader(list.List, true, false, list.NumListedStreamsEnd);
+        }
+          //DIDNT CLICK RED CHECKMARK
+        else {
+              //CLICKED A WHITE CHECKMARK
+            if ($(this).hasClass('i')) {
+              $(this).addClass('activeFilter');
+              list.flushNumListedStreams();
+              list.listLoader(list.List, true, false, list.NumListedStreamsEnd);
+            }
+              //DIDNT CLICK A CHECKMARK
+            else {
+                  //DIDNT CLICK CHECKMARK, CHECKMARK IS RED
+              if ($(this).parent().find('i').hasClass('activeFilter'))
+                  { $(this).parent().find('i').removeClass('activeFilter');
+                    $(this).next('span').find('input').off('input');
+                    list.flushNumListedStreams();
+                    list.listLoader(list.List, true, false, list.NumListedStreamsEnd);
+                  }
+                    //DIDNT CLICK A CHECKMARK, CHECKMARK IS WHITE
+              else {
+                $(this).parent().find('i').addClass('activeFilter');
+                list.flushNumListedStreams();
+                list.listLoader(list.List, true, false, list.NumListedStreamsEnd);
+              }
+            }
+
+
+        }
+
+  });
+
+  $('input').on('input', function() {
+    if($(this).val()==='') $(this).closest('li').find('i').removeClass('activeFilter');
+
+    else if (!($(this).closest('li').find('i').hasClass('activeFilter')) && $(this).val()!=='') {
+      // $('.toggleableFilter .activeFilter').removeClass('activeFilter');
+      $(this).closest('li').find('i').addClass('activeFilter');
+    }
+    list.flushNumListedStreams();
+    list.listLoader(list.List, true, false, list.NumListedStreamsEnd);
+
+  });
+
+
+//LIST SIZE AND CHAT SIZE SETTING LISTENERS
+    $('#listSize').change(function(){
+      $colList.css("width", $(this).val()+'%');
+    });
+
+    $('#chatSize').change(function(){
+      $chat.css("width", $(this).val()+'%');
+      $streams.css("width", 100-$(this).val()+'%');
+      cResizer.ResetOuterColumnDrag();
+      cResizer.ResetStreamColumnDrag();
+    });
+
+//REFRESH PERIOD SETTING LISTENER
+    $('#refreshPeriod').change(function(){
+      if ($(this).val() === 'NEVER') CListRefreshTimeMinutes = 9999999999;  //USED IN IN  listManager.js TO UPDATE STREAMS LIST EVERY SO OFTEN
+      else CListRefreshTimeMinutes = $(this).val();
+    });
+
+
+
+
+
+//CLICK LISTENERS FOR THE STREAM LIST
+    function moveDownStreamListener(i){
+      return function(){
+        var temp = WatchingStreams[i];
+        WatchingStreams[i]=WatchingStreams[i+1];
+        WatchingStreams[i+1]=temp;
+        window.changeChat(i,WatchingStreams[i]);
+        window.changeChat(i+1,WatchingStreams[i+1]);
+        window.renderStreamsSortList();
+      }
+    }
+
+      function moveUpStreamListener(i){
+        return function(){
+            var temp = WatchingStreams[i];
+            WatchingStreams[i]=WatchingStreams[i-1];
+            WatchingStreams[i-1]=temp;
+            window.changeChat(i,WatchingStreams[i]);
+            window.changeChat(i-1,WatchingStreams[i-1]);
+            window.renderStreamsSortList();
+        }
+      }
+
+      function deleteStreamListener(i){
+        return function(){
+          WatchingStreams[i]='';
+          $('#Stream'+i).text('');
+          window.changeChat(i,'');
+          window.renderStreamsSortList();
+        }
+      }
+
+    for(var i=0;i<4;i++){
+
+      if(i<3){
+        $('#moveDownStream'+i).click(moveDownStreamListener(i));
+      }
+      if(i>0){
+        $('#moveUpStream'+i).click(moveUpStreamListener(i));
+      }
+      $('.delStream'+i).click(deleteStreamListener(i));
+
+    }
+
+}
+
+module.exports= setStreamListButtonListeners;
+
+},{}],12:[function(require,module,exports){
+function streamUtils (){
+
+//CALL THIS AFTER RUNNING parseURL AND PASSING THE RESULTS INTO THIS FUNCTION
+  window.fillStreamsWithURLParams = function (UrlParams, WatchingStreams){
+	  try{
+	    if (UrlParams){
+	      var p=0;
+	      UrlParams.forEach(function(param){
+	        console.log(param+ ', ');
+	        WatchingStreams[p]=param;
+	        addToRecentStreams();
+	        if(p>3) throw BreakException;
+	        ++p;
+	      })
+	    }
+	  }catch(e) {
+	      alert('Maximum of 4 streams!');
+        return '';
+	  }finally{
+	    var length = WatchingStreams.length || 0;
+	    window.NumStreams=(length==0?1 :length==1?1 :length==2?2 :length==3?4: length==4?4 :4);
+	   }
+     return WatchingStreams;
+	  // alert('URL params used to populate streams. URL: ' + URL);
+	}
+
+
+//WRITES OVER WATCHINGSTREAMS[] ELEMENT WITH THE INPUT STREAM NAME, CHANGES THE #CHAT TO THE NEWLY SELECTED STREAM, UPDATES THE URL TO REFLECT THE CHANGE
+	window.loadNewStream= function (name){
+	    return function(){WatchingStreams[SelectedStream]=name;
+	                      addToRecentStreams();
+												var ss = SelectedStream;
+												if (NumStreams==1) ss = 0;
+
+												window.changeChat(SelectedStream,name);
+
+		                      if (Flash_Installed) $("#twitch_embed_player_"+ss)[0].loadStream(name);
+													else $('.stream'+ss).html('<iframe src="http://www.twitch.tv/'+WatchingStreams[c]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe>')
+
+													var newURL = URL;
+											WatchingStreams.forEach(function(stream){
+												if (stream != 'undefined')
+												 newURL += '/' + stream;
+											});
+											window.history.replaceState(null, null, newURL);
+	                     };
+	}
+
+//CHANGE THE SELECTED STREAM'S CHAT (STREAM NUMBER) TO THE CHAT OF THE GIVEN STREAM NAME
+  window.changeChat=function(SelectedStream, name){
+    $('#chat'+SelectedStream).html('<iframe style="z-index: 5; float: left;" src="http://www.twitch.tv/'+name+'/chat" frameborder="0" scrolling="no" id="chat_embed" height="100%" width="100%"></iframe>');
+  }
+
+
+  //ADDS THE CURRENTLY WATCHING STREAMS TO THE RECENT STREAMS LIST, IF THEY HAVEN'T BEEN ALREADY
+	window.addToRecentStreams= function(){
+	  WatchingStreams.forEach(function(stream){
+	    if(stream!=null && stream!=''){
+	      if ($.inArray(stream, RecentStreams)!==-1){}    //-1 IF stream IS NOT IN THE ARRAY RecentStreams
+	      else {RecentStreams.push(stream);}
+	      }
+	    });
+	}
+
+
+
+
+//CHANGES THE SELECTED STREAM AND MAKES THE STREAM NUMBER POPUP COME UP
+	window.changeSelectedStream= function(i){
+	  SelectedStream=i;
+	  var temp = i+1;
+	  var delay = true;
+	  $selectedStreamPopup.find('span').html('<span style="font-size: 200%;"> '+temp+'</span>');
+	  $selectedStreamPopup.show();
+	  var fadeout=setInterval(function(){$selectedStreamPopup.fadeOut(300); clearInterval(fadeout);}, 1000);
+	}
+
+//LOADING SCREEN
+	window.showStreamsLoadScreen= function(){
+	  $streams.html('<div class="fa loadingDivHide"><i class="loadingDivHide fa fa-3x fa-cog fa-spin"></i><div class="fa-cog-text" style="color:white;">Working on it...</div></div>');
+	}
+
+
+
+  window.getFavStreamsAndSort= function(value){
+		if(value!='' && value!=null && typeof(value)!='undefined') FavoritesString = value;
+
+			console.log('refreshed SessionFavoritesString');
+		$.getJSON('https://api.twitch.tv/kraken/streams?limit=100&channel='+FavoritesString+'&callback=?')
+		.done(function(arr2){
+				console.log('arr2');
+				console.log(arr2);
+
+				//GET RID OF ALL INVALID RESPONSES - Favorites is the new "cleaned" array (no empty objects in it)
+					var j=0;
+
+				arr2.streams.forEach(function(stream){
+					if(stream!=null && stream!='' && stream!={}){
+						Favorites[j]=stream;
+						j++;
+					}
+				});
+
+				//BUBBLE SORT WITHOUT MOVING ENTIRE OBJECTS (arr3[] HOLDS A LIST OF REFERENCES TO THE OBJECT'S POSITIONS IN Favorites)
+				var length=Favorites.length;
+				console.log('favorites.length');
+				console.log(Favorites.length);
+
+				var arr3=[];
+				for(var k=0;k<length;k++) arr3[k]=k;
+
+				for (var l=0;l<length-1;l++){
+					for (var m=0;m<length-1;m++){
+						var temp01=arr3[m];
+						var temp02=arr3[m+1];
+						if (Favorites[temp01].viewers<Favorites[temp02].viewers){
+							var temp2 = arr3[m];
+							arr3[m] = arr3[m+1];
+							arr3[m+1] = temp2;
+						}
+					}
+				}
+
+				console.log('sorted favorites:');
+				console.log(Favorites);
+
+
+					//DO LISTLOADER ON VIEWERS-SORTED LIST OF FAVORITES
+				// 	refreshingList=true;
+				// for(var n=0;n<length;n++){
+				// 		if(refreshingList) flushNumListedStreams();
+				// 		listLoader({streams:[Favorites[n]]},refreshingList,true,1);
+				// 		refreshingList=false;
+				// }
+				// NoListLockout=true;
+
+
+				//TURN THE Favorites ARRAY INTO A FavoritesString FORMAT
+				for (var a=0;a<Favorites.length;a++)
+					Favorites[a] = Favorites[a].channel.name;
+
+				localStorage.SortedFavoritesString = Favorites.toString();	//NOTE SETS THE GLOBAL SortedFavoritesString
+				deferred2.resolve(localStorage.SortedFavoritesString);
+				cookies.setCookie("FRefreshSession", true, 0.025);
+
+		})
+		.fail(function(){
+			list.NoListLockout=true;
+			refreshingList=false;
+			console.log('AJAX REQUEST FOR RECENT STREAMS FAILED!')
+
+		});
+
+	}
+
+
+
+}
+
+module.exports= streamUtils;
+
+},{}]},{},[1]);

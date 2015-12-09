@@ -4,10 +4,14 @@ function setupKeyListeners(){
   $("html").keypress(function( event ) {
     var player = $("#twitch_embed_player_"+SelectedStream)[0];
 
+  //HIDING LIST
+//hiding list is done in renderStreams, as per the requirement to be dynamic
+
 
       //WHEN IN SINGLE STREAM MODE THIS WILL SWITCH TO THE STREAM NUMBER PRESSED
     switch(event.which){
 
+        //SELECTS STREAM (1,2,3,4)
       case 49: case 50: case 51: case 52: case 53: case 54: case 55: case 56:
           for (var i=0;i<4;i++){
             if ( event.which == i+49 ) {
@@ -27,7 +31,7 @@ function setupKeyListeners(){
             else window.changeSelectedStream(i);
             break;
           }
-            //SELECTS THE CHAT
+            //SELECTS THE CHAT (5,6,7,8)
           if ( event.which == i+53 ) {
              event.preventDefault();
              window.ActiveChat=i;
@@ -40,7 +44,7 @@ function setupKeyListeners(){
           }
         break;
 
-      //PAUSING, MUTING, UNMUTING
+      //PAUSING, MUTING, UNMUTING (space,t,u)
       case 32:
         event.preventDefault();
         if (player.isPaused()) player.playVideo();
@@ -53,28 +57,6 @@ function setupKeyListeners(){
         player.unmute();
         break;
 
-
-
-        //HIDING LIST
-      case 97:
-          window.$colList.toggle();
-             var $collapseList = $(".collapseList");
-             var lw = $colList.width();
-          if (window.ListIsHidden){window.ListIsHidden=false; $collapseList.css({top: 0, left: lw, position:'absolute', 'z-index': 2});}
-          else {window.ListIsHidden=true; $collapseList.css({top: 0, left: 0, position:'absolute', 'z-index': 2});}
-          // ResetOuterColumnDrag();
-          // // renderStreams();
-          // // ResetAllDragColumns();
-          break;
-
-        //HIDING CHAT
-      case 100:
-          window.$chat.toggle();
-          cResizer.ResetStreamColumnDrag();
-          // ResetOuterColumnDrag();
-          // // renderStreams();
-          // // ResetAllDragColumns();
-          break;
 
         //SET STREAM QUALITY
       case 108:

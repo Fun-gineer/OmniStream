@@ -1,7 +1,7 @@
 function streamUtils (){
 
-
-  window.fillStreamsFromURL = function (){
+//CALL THIS AFTER RUNNING parseURL AND PASSING THE RESULTS INTO THIS FUNCTION
+  window.fillStreamsWithURLParams = function (UrlParams, WatchingStreams){
 	  try{
 	    if (UrlParams){
 	      var p=0;
@@ -15,23 +15,25 @@ function streamUtils (){
 	    }
 	  }catch(e) {
 	      alert('Maximum of 4 streams!');
+        return '';
 	  }finally{
 	    var length = WatchingStreams.length || 0;
-	    NumStreams=(length==0?1 :length==1?1 :length==2?2 :length==3?4: length==4?4 :4);
+	    window.NumStreams=(length==0?1 :length==1?1 :length==2?2 :length==3?4: length==4?4 :4);
 	   }
-
-	  window.parseURL();
+     return WatchingStreams;
 	  // alert('URL params used to populate streams. URL: ' + URL);
 	}
 
 
-
+//WRITES OVER WATCHINGSTREAMS[] ELEMENT WITH THE INPUT STREAM NAME, CHANGES THE #CHAT TO THE NEWLY SELECTED STREAM, UPDATES THE URL TO REFLECT THE CHANGE
 	window.loadNewStream= function (name){
 	    return function(){WatchingStreams[SelectedStream]=name;
 	                      addToRecentStreams();
 												var ss = SelectedStream;
 												if (NumStreams==1) ss = 0;
-												$('#chat'+SelectedStream).html('<iframe style="z-index: 5; float: left;" src="http://www.twitch.tv/'+name+'/chat" frameborder="0" scrolling="no" id="chat_embed" height="100%" width="100%"></iframe>');
+
+												window.changeChat(SelectedStream,name);
+
 		                      if (Flash_Installed) $("#twitch_embed_player_"+ss)[0].loadStream(name);
 													else $('.stream'+ss).html('<iframe src="http://www.twitch.tv/'+WatchingStreams[c]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe>')
 
@@ -43,6 +45,11 @@ function streamUtils (){
 											window.history.replaceState(null, null, newURL);
 	                     };
 	}
+
+//CHANGE THE SELECTED STREAM'S CHAT (STREAM NUMBER) TO THE CHAT OF THE GIVEN STREAM NAME
+  window.changeChat=function(SelectedStream, name){
+    $('#chat'+SelectedStream).html('<iframe style="z-index: 5; float: left;" src="http://www.twitch.tv/'+name+'/chat" frameborder="0" scrolling="no" id="chat_embed" height="100%" width="100%"></iframe>');
+  }
 
 
   //ADDS THE CURRENTLY WATCHING STREAMS TO THE RECENT STREAMS LIST, IF THEY HAVEN'T BEEN ALREADY
@@ -58,7 +65,7 @@ function streamUtils (){
 
 
 
-	//CHANGES THE SELECTED STREAM AND MAKES THE POPUP COME UP
+//CHANGES THE SELECTED STREAM AND MAKES THE STREAM NUMBER POPUP COME UP
 	window.changeSelectedStream= function(i){
 	  SelectedStream=i;
 	  var temp = i+1;
@@ -68,7 +75,7 @@ function streamUtils (){
 	  var fadeout=setInterval(function(){$selectedStreamPopup.fadeOut(300); clearInterval(fadeout);}, 1000);
 	}
 
-	//LOADING SCREEN
+//LOADING SCREEN
 	window.showStreamsLoadScreen= function(){
 	  $streams.html('<div class="fa loadingDivHide"><i class="loadingDivHide fa fa-3x fa-cog fa-spin"></i><div class="fa-cog-text" style="color:white;">Working on it...</div></div>');
 	}
@@ -145,8 +152,6 @@ function streamUtils (){
 		});
 
 	}
-
-
 
 
 

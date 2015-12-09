@@ -1,8 +1,9 @@
 class listManager{
 
-
   //ADD MORE STUFF TO THE LIST WHEN THE SCROLLBAR REACHES THE BOTTOM
   constructor(){
+
+    this.BASE_TWITCH_REQUEST_URL= 'https://api.twitch.tv/kraken/streams?';
 
     this.CListRefreshTimeMinutes
     this.CNumListedStreamsStart = 0;
@@ -11,9 +12,6 @@ class listManager{
 
     this.NumListedStreamsStart = 0;
     this.NumListedStreamsEnd = 25;
-
-    this.DefaultRequestURL= 'https://api.twitch.tv/kraken/streams?';			//STAYS THE SAME
-    this.RequestURL = 'https://api.twitch.tv/kraken/streams?';						//CHANGES
 
     this.FilteringListStaticCounter = 0;
     this.ListStaticCounter=0;            //used when accessing the list renderer multiple times for when multiple concurrent ajax requests resolve
@@ -31,31 +29,31 @@ class listManager{
   }
 
 
-    // SETUP OF THE STREAM LIST VIEW WITH CLICK LISTENERS
+// SETUP OF THE STREAM LIST VIEW WITH CLICK LISTENERS
   populateList (reqURL, refreshingList){
-    //PREVENTS OTHER LIST EVENTS FROM BEING FIRED (SO THAT MULTIPLE SETS OF AJAX REQUESTS DON'T COINCIDE)
-    this.NoListLockout=false;
+      //PREVENTS OTHER LIST EVENTS FROM BEING FIRED SO THAT MULTIPLE SETS OF AJAX REQUESTS DON'T COINCIDE
+      this.NoListLockout=false;
 
-    if(refreshingList) this.flushNumListedStreams();
+      if(refreshingList) this.flushNumListedStreams();
 
-      var that= this;
-    $.getJSON(reqURL+'offset='+this.NumListedStreamsStart+'&limit='+this.NumListedStreamsEnd+'&callback=?', function(result){   //the ? for the callback name signals jQuery that it is a JSONP request and not a JSON request. jQuery registers and calls the callback function automatically.
-        //response data are now in the result variable
-    //  var jsonString = JSON.stringify(result);
-    //  var result = JSON.parse(result);
-     that.listLoader(result, refreshingList, refreshingList, that.NumListedStreamsEnd);
-    });
-  }
+        var that= this;
+      $.getJSON(this.BASE_TWITCH_REQUEST_URL+'offset='+this.NumListedStreamsStart+'&limit='+this.NumListedStreamsEnd+'&callback=?', function(result){   //the ? for the callback name signals jQuery that it is a JSONP request and not a JSON request. jQuery registers and calls the callback function automatically.
+          //response data are now in the result variable
+      //  var jsonString = JSON.stringify(result);
+      //  var result = JSON.parse(result);
+       that.listLoader(result, refreshingList, refreshingList, that.NumListedStreamsEnd);
+      });
+    }
 
-    //LOAD THE STREAMS LIST ON THE LEFT
-    //YOU'RE EITHER REFRESHING THE LIST OR ADDING TO THE LIST
+//LOAD THE STREAMS LIST ON THE LEFT
+//YOU'RE EITHER REFRESHING THE LIST OR ADDING TO THE LIST
 
-    //YOU PASS IN A DIFFERENT LIST EVERY TIME, SO YOU ONLY NEED TO KEEP A STATIC COUNTER TO KEEP THE INDEX POSITION WHILE FILTERING
-    //WHEN USING LISTLOADER ON ITS OWN, YOU NEED TO USE flushNumListedStreams() TO CLEAR THE VALUE OF this.NumListedStreamsStart...
-    //NOTE listLoader HAS NO TOLERANCE FOR EMPTY LIST ENTRIES (ABORTS FUNCTION ON SIGHT), AND REQUIRES YOU TO KEEP THE
-    //START AND FINISH LIST PUSH POSITIONS YOURSELF IF YOU ARE MAKING MULTIPLE CALLS TO IT...
-    //changingCat IS FOR WHEN YOU CLICK A NEW CATEGORY BUTTON, IT WILL RUN ONCE WITHOUT FILTERING TO POPULATE List, AND THEN ONCE WITH
-    //TO RENDER THE LIST PROPERLY FILTERED
+//YOU PASS IN A DIFFERENT LIST EVERY TIME, SO YOU ONLY NEED TO KEEP A STATIC COUNTER TO KEEP THE INDEX POSITION WHILE FILTERING
+//WHEN USING LISTLOADER ON ITS OWN, YOU NEED TO USE flushNumListedStreams() TO CLEAR THE VALUE OF this.NumListedStreamsStart...
+//NOTE listLoader HAS NO TOLERANCE FOR EMPTY LIST ENTRIES (ABORTS FUNCTION ON SIGHT), AND REQUIRES YOU TO KEEP THE
+//START AND FINISH LIST PUSH POSITIONS YOURSELF IF YOU ARE MAKING MULTIPLE CALLS TO IT...
+//changingCat IS FOR WHEN YOU CLICK A NEW CATEGORY BUTTON, IT WILL RUN ONCE WITHOUT FILTERING TO POPULATE List, AND THEN ONCE WITH
+//TO RENDER THE LIST PROPERLY FILTERED
   listLoader(list, refreshingList,changingCat, streamIteratorEnd) {
 
         var filtering=false;
@@ -140,7 +138,7 @@ class listManager{
     };
 
 
-  //RESETS THE STREAM COUNTER FOR THE LIST TO BEGIN ANEW
+//RESETS THE STREAM COUNTER FOR THE LIST TO BEGIN ANEW
 	flushNumListedStreams(){
 	  this.NumListedStreamsEnd= this.CNumListedStreamsEnd;
 		this.NumListedStreamsStart= this.CNumListedStreamsStart;
@@ -148,8 +146,45 @@ class listManager{
 
 
 
+  controlListScroll(){
 
-  //FILTERING
+              var _this= this;
+      $(".colList ul").scroll(function() {
+        if($(document).scrollTop() == 0 && _this.NumListedStreamsEnd<251 && _this.ListAddCooldown==false) {
+          if ($('#topStreams').hasClass('activeButton')) {
+            _this.NumListedStreamsEnd+=25;
+            _this.NumListedStreamsStart+=25;
+            _this.addToTopStreams(false);
+          }
+          if ($('#favStreams').hasClass('activeButton')){
+            _this.addToFavStreams('',false);
+          }
+          if ($('#recStreams').hasClass('activeButton')) {
+            _this.NumListedStreamsEnd+=25;
+            _this.NumListedStreamsStart+=25;
+            _this.addToRecStreams(false);
+          }
+
+
+          _this.ListAddCooldown=true;
+          _this.addListTimer=setInterval(addListReset, 1500);
+        };
+      });
+
+          //REFRESH THE LIST EVERY MINUTE
+          //TODO BROKEN, NEEDS TO BE CUSTOMIZED TO THE SELECTED LISTBAR ITEM
+    _this.refreshListInterval=setInterval(_this.populateList(_this.BASE_TWITCH_REQUEST_URL,true), _this.CListRefreshTimeMinutes*60000);
+
+    function addListReset(){
+      _this.ListAddCooldown=false;
+      clearInterval(_this.addListTimer);
+    }
+  }
+
+
+
+
+//FILTERING
 	filterByStreamer(streams){
 	  var newList = {streams:[]};
 	  var streamer = $('#streamer').val();
@@ -184,42 +219,6 @@ class listManager{
 
 
 
-  controlListScroll(){
-
-              var _this= this;
-      $(".colList ul").scroll(function() {
-        if($(document).scrollTop() == 0 && _this.NumListedStreamsEnd<251 && _this.ListAddCooldown==false) {
-          if ($('#topStreams').hasClass('activeButton')) {
-            _this.NumListedStreamsEnd+=25;
-            _this.NumListedStreamsStart+=25;
-            _this.addToTopStreams(false);
-          }
-          if ($('#favStreams').hasClass('activeButton')){
-            window.addToFavStreams('',false);
-          }
-          if ($('#recStreams').hasClass('activeButton')) {
-            _this.NumListedStreamsEnd+=25;
-            _this.NumListedStreamsStart+=25;
-            _this.addToRecStreams(false);
-          }
-
-
-          _this.ListAddCooldown=true;
-          _this.addListTimer=setInterval(addListReset, 1500);
-        };
-      });
-
-          //REFRESH THE LIST EVERY MINUTE
-          //TODO BROKEN, NEEDS TO BE CUSTOMIZED TO THE SELECTED LISTBAR ITEM
-    _this.refreshListInterval=setInterval(_this.populateList(_this.RequestURL,true), _this.CListRefreshTimeMinutes*60000);
-
-    function addListReset(){
-      _this.ListAddCooldown=false;
-      clearInterval(_this.addListTimer);
-    }
-  }
-
-
   addToRecStreams(refreshing){
 
     this.NoListLockout=false;
@@ -231,6 +230,7 @@ class listManager{
         }
 
 
+        //THIS BLOCK TRIES TO FIND AT LEAST ONE LIVE STREAM FROM YOUR LIST, UP TO A MAX OF 4 API HITS
       var length = 0;
       var lc = 0;
       var _this=this;
@@ -268,10 +268,64 @@ class listManager{
   addToTopStreams(refreshing){
     if(this.NoListLockout){
       this.NoListLockout=false;
-        this.populateList(list.DefaultRequestURL, refreshing);
+        this.populateList(this.BASE_TWITCH_REQUEST_URL, refreshing);
       this.NoListLockout=true;
     }
   }
+
+
+  addToFavStreams(value, refreshing){
+		if(value!=''  && value!=null && typeof(value)!='undefined') SortedFavoritesString = value;
+
+console.log('Sorted favorites string:');
+console.log(SortedFavoritesString);
+
+		list.NoListLockout=false;
+				if(refreshing) {
+					list.flushNumListedStreams();
+					list.NumListedStreamsEnd=list.CNumListedStreamsEnd;
+					list.FavIndexL=list.CNumListedStreamsStart;
+					list.FavIndexH=list.CNumListedStreamsEnd;
+				}
+
+					//ONLY USE A SUBSET OF Favorites TO QUERY
+					//HAVE TO CHOP SOME ELEMENTS OFF OF FavoritesString. SO TURN INTO AN ARRAY, SLICE IT, THEN STRINGIFY IT AGAIN
+			var res = SortedFavoritesString.split(',');
+console.log('making requests in loop to add to favorites');
+
+
+        //TRIES TO FIND AT LEAST ONE LIVE FAVORITED STREAM, UP TO A MAX OF 4 API HITS
+			var length = 0;
+			var lc = 0;
+			loop();
+
+			function loop(){
+
+				var qString = res.slice(list.FavIndexL,list.FavIndexH).toString();
+console.log('qString');
+console.log(qString);
+
+							if (lc == 4 || qString=='' || qString==null) {list.NoListLockout=true; return;}
+							lc++;
+
+				$.getJSON('https://api.twitch.tv/kraken/streams?channel='+qString+'&callback=?')
+				.done(function(favorites){
+					// Favorites.push(favorites);		//SET THE GLOBAL FAVORITES TO THE RESULT
+					console.log('addToFavStreams favorites:');
+					console.log(favorites);
+					  list.NumListedStreamsEnd+=favorites.streams.length;
+						list.listLoader(favorites,refreshing,false,list.NumListedStreamsEnd);
+						list.NumListedStreamsStart+=favorites.streams.length;
+						list.FavIndexL+=list.CNumListedStreamsEnd;
+						list.FavIndexH+=list.CNumListedStreamsEnd;
+						refreshing = false;
+						length += favorites.streams.length;
+						if (length < 1)  loop();
+						else {lc=4; list.NoListLockout=true;}
+				})
+			}
+
+	}
 
 }
 

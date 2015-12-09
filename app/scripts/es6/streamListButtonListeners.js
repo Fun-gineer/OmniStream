@@ -80,13 +80,13 @@ function setStreamListButtonListeners(){
                       //USES FavoritesString TO SORT BY VIEWERS, THEN SETS SortedFavoritesString BASED OFF THAT ORDERING.
                       //DOES NOTHING IF THE CURRENT SORTED LIST ISNT EXPIRED
                     window.deferred1.done(function(value){window.getFavStreamsAndSort(value)});     //hit the API for all favorited streams, then sort them and set the string to reflect that
-                    window.deferred2.done(function(value){window.addToFavStreams(value,true)});
+                    window.deferred2.done(function(value){list.addToFavStreams(value,true)});
               } else {
                 console.log(cookies.getCookie('FRefreshSession'));
                 console.log('didnt refresh anything');
                 window.FavoritesString = localStorage.FavoritesString;
                 window.SortedFavoritesString = localStorage.SortedFavoritesString;
-                window.addToFavStreams('',true);     //use a sub-array of FavoritesString  (25 entries if you havent modified the global for list refresh increment) to populate the list.
+                list.addToFavStreams('',true);     //use a sub-array of FavoritesString  (25 entries if you havent modified the global for list refresh increment) to populate the list.
               }
 
           }
@@ -110,7 +110,7 @@ function setStreamListButtonListeners(){
           $(this).removeClass('activeFilter');
           $(this).next('span').find('input').off('input');
           list.flushNumListedStreams();
-          list.listLoader(List, true, false, list.NumListedStreamsEnd);
+          list.listLoader(list.List, true, false, list.NumListedStreamsEnd);
         }
           //DIDNT CLICK RED CHECKMARK
         else {
@@ -119,7 +119,6 @@ function setStreamListButtonListeners(){
               $(this).addClass('activeFilter');
               list.flushNumListedStreams();
               list.listLoader(list.List, true, false, list.NumListedStreamsEnd);
-              alert('white check!');
             }
               //DIDNT CLICK A CHECKMARK
             else {
@@ -173,6 +172,54 @@ function setStreamListButtonListeners(){
       if ($(this).val() === 'NEVER') CListRefreshTimeMinutes = 9999999999;  //USED IN IN  listManager.js TO UPDATE STREAMS LIST EVERY SO OFTEN
       else CListRefreshTimeMinutes = $(this).val();
     });
+
+
+
+
+
+//CLICK LISTENERS FOR THE STREAM LIST
+    function moveDownStreamListener(i){
+      return function(){
+        var temp = WatchingStreams[i];
+        WatchingStreams[i]=WatchingStreams[i+1];
+        WatchingStreams[i+1]=temp;
+        window.changeChat(i,WatchingStreams[i]);
+        window.changeChat(i+1,WatchingStreams[i+1]);
+        window.renderStreamsSortList();
+      }
+    }
+
+      function moveUpStreamListener(i){
+        return function(){
+            var temp = WatchingStreams[i];
+            WatchingStreams[i]=WatchingStreams[i-1];
+            WatchingStreams[i-1]=temp;
+            window.changeChat(i,WatchingStreams[i]);
+            window.changeChat(i-1,WatchingStreams[i-1]);
+            window.renderStreamsSortList();
+        }
+      }
+
+      function deleteStreamListener(i){
+        return function(){
+          WatchingStreams[i]='';
+          $('#Stream'+i).text('');
+          window.changeChat(i,'');
+          window.renderStreamsSortList();
+        }
+      }
+
+    for(var i=0;i<4;i++){
+
+      if(i<3){
+        $('#moveDownStream'+i).click(moveDownStreamListener(i));
+      }
+      if(i>0){
+        $('#moveUpStream'+i).click(moveUpStreamListener(i));
+      }
+      $('.delStream'+i).click(deleteStreamListener(i));
+
+    }
 
 }
 
