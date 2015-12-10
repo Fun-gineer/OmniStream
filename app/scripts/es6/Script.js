@@ -10,8 +10,9 @@
 // https://api.twitch.tv/kraken/search/streams?q=Lineage&limit=100&offset=0&type=suggest&live
 //THIS ONE WILL DO PARTIAL QUERIES FOR GAMES
 //https://api.twitch.tv/kraken/search/games?q=counter&limit=100&offset=0&type=suggest&live
+//https://api.twitch.tv/kraken/games/top?limit=&offset=0
 // THIS ONE WILL DO PARTIAL QUERIES AGAINST ALL
-//https://api.twitch.tv/kraken/search/channels?q=Programming
+//https://api.twitch.tv/kraken/search/channels?q=
 
 
 
@@ -22,84 +23,30 @@ $(function(){
 
 	// document.domain=document.domain;	//iframe->document port matching. The Twitch API sets the domain correctly, so no problems there
 
+//INCLUDES
 	(require('./streamUtils.js'))();
 	window.cookies= new (require('./cookies.js'));
 	window.mobile= new (require('./mobile.js'));
 	window.list= new(require('./listManager.js'));
-	window.parseURL= require('./parseURL.js');
+	(require('./URLUtils.js'))();
+	(require('./Dropdown.js'))();
 	window.renderStreams= require('./renderStreams.js');
 	window.cResizer= new(require('./columnResizer.js'));
-//init script
-	(require('./init.js'))();
 
 
 
-
-	window.renderStreamsSortList=function(){
-		for(var i=0;i<4;i++){
-			$('#Stream'+i).text(WatchingStreams[i]);
-		}
-	}
-
-
-
-
-
-	//WE ONLY WANT TO HIT THE TWITCH API EVERY FEW DAYS OR SO TO REFRESH FAVORITES, ELSE THERE WOULD BE TOO MANY HITS
-	//HIT THE API TO REFRESH THE FAVORITES STRING IN LOCAL STORAGE EVERY THREE DAYS. SET THE GLOBAL FavoritesString TO localStorage.FavoritesString
-			//THIS IS ONLY MADE TO BE RUN AT STARTUP TO LOAD THE OLD FavoritesString TO SEE IF IT'S EXPIRED... USE FRefreshSession INSTEAD OF
-			//FRefresh COOKIE TO TRACK VIEWERCOUNT STALENESS
-			//NOTE FRefresh IS FOR CHECKING FOR FAVORITES LIST STALENESS, WHILE FRefreshSession IS TO CHECK FOR VIEWERCOUNT STALENESS ON FRefresh LIST'S MEMBERS (they have different expiry dates)
-	window.refreshFavoritesString= function(force){
-
-		//CHECK THE BROWSER FOR LOCAL STORAGE SUPPORT AND SEE IF COOKIES ARE ENABLED...
-			if(storageEnabled && cookies.CookiesEnabled) {
-				if(force || typeof (localStorage.FavoritesString) == 'undefined' || localStorage.FavoritesString == null || cookies.getCookie('FRefresh') == null || cookies.getCookie('FRefresh') == ''){
-					console.log('refreshed FavoritesString');
-					$.getJSON('https://api.twitch.tv/kraken/users/'+Username+'/follows/channels?limit='+CFavStreamsSearchLimit+'&offset=0&callback=?')
-					.done(function(arr){           //ON SUCCESS
-
-									var stringArray = [];
-								arr.follows.forEach(function(stream){
-									stringArray.push(stream.channel.name);
-										});
-										//SAVE THE FAVORITES STRING INTO LOCAL STORAGE, MAKE A TRACKING COOKIE THAT GIVES IT AN EXPIRY DATE
-										localStorage.setItem("FavoritesString", stringArray.toString());
-										cookies.setCookie("FRefresh", true, 3);
-									  deferred1.resolve(localStorage.FavoritesString);
-														// localStorage.removeItem("lastname");
-								})
-								//ON ERROR
-					.fail(function(){
-								console.log('ATTEMPT TO GET USER\'S FOLLOWED STREAMS FAILED!' );
-								deferred1.resolve('');
-					});
-
-				}
-				else deferred1.resolve(localStorage.FavoritesString);
-			}
-			else {
-			    console.log('Favorites wont work - you need to enable cookies and local storage. You may not have native local storage support in your browser');
-					$('#favStreams').off('click');
-					deferred1.resolve('');
-			}
-
-	}
-
-
-
-
-
-
-
-  //CONFIG VARIABLES
+//CONFIG VARIABLES
 window.CFavStreamsSearchLimit = 400;   //maximum number of followed streams to fetch from the API to inspect for live-ness to populate the favorites list
 window.CHideGame = false;
 window.CHideDesc = true;
 window.CSaveRecentStreams = true;
 
+//URLs
+window.BASE_TWITCH_REQUEST_URL= 'https://api.twitch.tv/kraken/streams?';
+window.TOP_GAMES_REQUEST_URL = 'https://api.twitch.tv/kraken/games/top?limit=50';
 
-  //INITIALIZE
+//INITIALIZE
+window.topGamesIndex=0;
 window.lw=500;
 window.NumStreams=1;  //number of streams being displayed, NOT the number of streams in the watching-list
 window.SelectedStream=0;   //the stream that is "active" to be changed on a list click
@@ -120,8 +67,7 @@ window.deferred1 = $.Deferred();
 window.deferred2 = $.Deferred();
 
 
-
-  //CACHE DOM
+//CACHE DOM
 window.$list = $('#list');
 window.$colList = $('.colList');
 window.$streams = $('.colStreams');
@@ -130,42 +76,29 @@ window.$selectedStreamPopup = window.$streams;    //meaningless; purely for init
 window.$filterList = $('#filterList');
 
 
-	//RUN
 
-//CHOOSE BETWEEN LOADING FROM COOKIES OR USING URL PARAMS (TRIES URL PARAMS FIRST)
-			window.URL='';       //without appended streams or index.html#
-			UrlParams= parseURL();
-if(typeof UrlParams[0] == "undefined" && CookiesEnabled){
-  console.log('No URL params. loading cookies');
-  cookies.getStreamCookies();    //brings back the streams stored in the cookies session and updates the URL to reflect that (but only if a custom URL is not set)
-}
-else{
-	console.log('Using URL to populate streams');
-	WatchingStreams = fillStreamsWithURLParams(UrlParams,WatchingStreams);
-};
-// alert(window.history.length);
+//RUN
 
+//init script
+(require('./init.js'))();
 showStreamsLoadScreen();
-cookies.getLayoutCookies();     //loads layout cookies and does resizing
+cookies.setLayoutFromCookies();     //loads layout cookies and does resizing
 cResizer.setResizableColumns('sample',true,cResizer.ResetStreamColumnDrag);
 addToRecentStreams();   //sets recent streams to the streams you are initially watching
+renderTopGamesDisplay(true);	//THE DROPDOWN MENU
 
-list.populateList(list.DefaultRequestURL,true);
+list.URLRequestTopStreams(window.BASE_TWITCH_REQUEST_URL,true);
 list.controlListScroll();
+controlDropdownScroll();
 
 window.renderStreamsSortList();
 
 (require('./streamListButtonListeners.js'))();
-(require('./closeListener.js'))();  //creates cookies to store layout info for getLayoutCookies and getStreamCookies
+(require('./closeListener.js'))();  //creates cookies to store layout info for setLayoutFromCookies and setStreamsFromCookies
 cResizer.setResizableStreamList();
 (require('./keyListenersSetup.js'))();
+(require('./initFinished.js'))();
 
-$( window ).resize(function() {
-	var $collapseList = $(".collapseList");
-	var $collapseChat = $('.collapseChat');
-	$collapseList.css({top: 0, left: $colList.width(), position:'absolute', 'z-index': 2});
-	$collapseChat.css({top: 0, right: 0, position:'absolute', 'z-index': 2});
-});
 
 });
 

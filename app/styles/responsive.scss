@@ -17,27 +17,25 @@
 	.colList {
 	  width: 20vw;
 
+				#listBar {
+					background-color: black;
+					position: absolute;
+					float: left;
+					width: 100%;
+					height: 12vh;
+					top: 0;
+					left: 0;
+					z-index: 5;
+				}
+
+				#list {
+					position: absolute;
+					float: left;
+					top:12vh;
+					left:0;
+					height: 88vh;
+				}
 	}
-
-
-					#listBar {
-						background-color: black;
-						position: absolute;
-						float: left;
-						width: 100%;
-						height: 8vh;
-						top: 0;
-						left: 0;
-						z-index: 5;
-					}
-
-					#list {
-						position: absolute;
-						float: left;
-						top:8vh;
-						left:0;
-						height: 95vh;
-					}
 
 	.dropdown-menu {
 	  margin-left: 10px;
@@ -65,27 +63,27 @@
 @media screen and (max-width: 800px) {
 
 	.colList {
-		width: 65vw;
-	}
+		width: 55vw;
 
-	#listBar {
-		background-color: black;
-		position: absolute;
-		float: left;
-		width: 100%;
-		height: 10vh;
-		top: 0;
-		left: 0;
-		z-index: 5;
-	}
+			#listBar {
+				background-color: black;
+				position: absolute;
+				float: left;
+				width: 100%;
+				height: 22vh;
+				top: 0;
+				left: 0;
+				z-index: 5;
+			}
 
-	#list {
-		position: absolute;
-		float: left;
-		top:10vh;
-		left:0;
-		height: 95vh;
-	}
+			#list {
+				position: absolute;
+				float: left;
+				top:22vh;
+				left:0;
+				height: 78vh;
+			}
+		}
 
 	.dropdown-menu {
 	  margin-left: 2vw;

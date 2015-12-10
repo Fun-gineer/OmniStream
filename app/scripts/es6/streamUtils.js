@@ -1,49 +1,24 @@
 function streamUtils (){
 
-//CALL THIS AFTER RUNNING parseURL AND PASSING THE RESULTS INTO THIS FUNCTION
-  window.fillStreamsWithURLParams = function (UrlParams, WatchingStreams){
-	  try{
-	    if (UrlParams){
-	      var p=0;
-	      UrlParams.forEach(function(param){
-	        console.log(param+ ', ');
-	        WatchingStreams[p]=param;
-	        addToRecentStreams();
-	        if(p>3) throw BreakException;
-	        ++p;
-	      })
-	    }
-	  }catch(e) {
-	      alert('Maximum of 4 streams!');
-        return '';
-	  }finally{
-	    var length = WatchingStreams.length || 0;
-	    window.NumStreams=(length==0?1 :length==1?1 :length==2?2 :length==3?4: length==4?4 :4);
-	   }
-     return WatchingStreams;
-	  // alert('URL params used to populate streams. URL: ' + URL);
-	}
-
 
 //WRITES OVER WATCHINGSTREAMS[] ELEMENT WITH THE INPUT STREAM NAME, CHANGES THE #CHAT TO THE NEWLY SELECTED STREAM, UPDATES THE URL TO REFLECT THE CHANGE
-	window.loadNewStream= function (name){
-	    return function(){WatchingStreams[SelectedStream]=name;
-	                      addToRecentStreams();
-												var ss = SelectedStream;
-												if (NumStreams==1) ss = 0;
+	window.loadNewStream= function (name,SelectedStream){
+	    return function(){
+                WatchingStreams[SelectedStream]=name;
+                addToRecentStreams();
+        				var ss = SelectedStream;
+        				if (NumStreams==1) ss = 0;
 
-												window.changeChat(SelectedStream,name);
+              //CHANGE THE CHAT TO THE NEW STREAM
+        				window.changeChat(SelectedStream,name);
 
-		                      if (Flash_Installed) $("#twitch_embed_player_"+ss)[0].loadStream(name);
-													else $('.stream'+ss).html('<iframe src="http://www.twitch.tv/'+WatchingStreams[c]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe>')
+              //TWITCH API TO LOAD A NEW STREAM
+                if (Flash_Installed) $("#twitch_embed_player_"+ss)[0].loadStream(name);
+      					else $('.stream'+ss).html('<iframe src="http://www.twitch.tv/'+WatchingStreams[c]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe>')
 
-													var newURL = URL;
-											WatchingStreams.forEach(function(stream){
-												if (stream != 'undefined')
-												 newURL += '/' + stream;
-											});
-											window.history.replaceState(null, null, newURL);
-	                     };
+              //UPDATE URL
+                updateURL(window.URL,WatchingStreams);
+              };
 	}
 
 //CHANGE THE SELECTED STREAM'S CHAT (STREAM NUMBER) TO THE CHAT OF THE GIVEN STREAM NAME
@@ -52,7 +27,8 @@ function streamUtils (){
   }
 
 
-  //ADDS THE CURRENTLY WATCHING STREAMS TO THE RECENT STREAMS LIST, IF THEY HAVEN'T BEEN ALREADY
+
+//ADDS THE CURRENTLY WATCHING STREAMS TO THE RECENT STREAMS LIST, IF THEY HAVEN'T BEEN ALREADY
 	window.addToRecentStreams= function(){
 	  WatchingStreams.forEach(function(stream){
 	    if(stream!=null && stream!=''){
@@ -152,6 +128,66 @@ function streamUtils (){
 		});
 
 	}
+
+
+//WE ONLY WANT TO HIT THE TWITCH API EVERY FEW DAYS OR SO TO REFRESH FAVORITES, ELSE THERE WOULD BE TOO MANY HITS
+//HIT THE API TO REFRESH THE FAVORITES STRING IN LOCAL STORAGE EVERY THREE DAYS. SET THE GLOBAL FavoritesString TO localStorage.FavoritesString
+    //THIS IS ONLY MADE TO BE RUN AT STARTUP TO LOAD THE OLD FavoritesString TO SEE IF IT'S EXPIRED... USE FRefreshSession INSTEAD OF
+    //FRefresh COOKIE TO TRACK VIEWERCOUNT STALENESS
+    //NOTE FRefresh IS FOR CHECKING FOR FAVORITES LIST STALENESS, WHILE FRefreshSession IS TO CHECK FOR VIEWERCOUNT STALENESS ON FRefresh LIST'S MEMBERS (they have different expiry dates)
+  window.refreshFavoritesString= function(force){
+
+    //CHECK THE BROWSER FOR LOCAL STORAGE SUPPORT AND SEE IF COOKIES ARE ENABLED...
+      if(storageEnabled && cookies.CookiesEnabled) {
+        if(force || typeof (localStorage.FavoritesString) == 'undefined' || localStorage.FavoritesString == null || cookies.getCookie('FRefresh') == null || cookies.getCookie('FRefresh') == ''){
+          console.log('refreshed FavoritesString');
+          $.getJSON('https://api.twitch.tv/kraken/users/'+Username+'/follows/channels?limit='+CFavStreamsSearchLimit+'&offset=0&callback=?')
+          .done(function(arr){           //ON SUCCESS
+
+                  var stringArray = [];
+                arr.follows.forEach(function(stream){
+                  stringArray.push(stream.channel.name);
+                    });
+                    //SAVE THE FAVORITES STRING INTO LOCAL STORAGE, MAKE A TRACKING COOKIE THAT GIVES IT AN EXPIRY DATE
+                    localStorage.setItem("FavoritesString", stringArray.toString());
+                    cookies.setCookie("FRefresh", true, 3);
+                    deferred1.resolve(localStorage.FavoritesString);
+                            // localStorage.removeItem("lastname");
+                })
+                //ON ERROR
+          .fail(function(){
+                console.log('ATTEMPT TO GET USER\'S FOLLOWED STREAMS FAILED!' );
+                deferred1.resolve('');
+          });
+
+        }
+        else deferred1.resolve(localStorage.FavoritesString);
+      }
+      else {
+          console.log('Favorites wont work - you need to enable cookies and local storage. You may not have native local storage support in your browser');
+          $('#favStreams').off('click');
+          deferred1.resolve('');
+      }
+
+  }
+
+
+  window.swapStreams= function(i,j){
+    //SWAP STREAMS
+    var temp = WatchingStreams[i];
+    WatchingStreams[i] = WatchingStreams[j];
+    WatchingStreams[j] = WatchingStreams[i];
+
+    //SWAP CHAT
+    changeChat(i,WatchingStreams[j]);
+    changeChat(j,WatchingStreams[i]);
+
+    //SWAP VIEWER COUNT
+    temp = ViewerCount[i];
+    ViewerCount[i] = ViewerCount[j];
+    ViewerCount[j] = ViewerCount[i];
+
+  }
 
 
 

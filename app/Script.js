@@ -1,4 +1,54 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+//FUNCTIONS FOR THE STREAM REARRANGER
+function Dropdown(){
+
+  //POPULATES THE DROPDOWN MENU STREAM LIST WITH THE STREAMS BEING WATCHED
+    window.renderStreamsSortList=function(){
+      for(var i=0;i<4;i++){
+        $('#Stream'+i).text(WatchingStreams[i]);
+      }
+    }
+
+    window.renderTopGamesDisplay=function(refreshing){
+      if(refreshing) {
+        var i=0;
+        window.topGamesIndex=50;
+      } else{
+        i=window.topGamesIndex;
+        window.topGamesIndex += 50;
+      }
+
+      $.getJSON(window.TOP_GAMES_REQUEST_URL+'&offset='+i+'&callback=?', function(topGames){_renderTopGamesDisplay(topGames)});
+      function _renderTopGamesDisplay(topGames){
+        for (i;i<topGames.top.length;i++){
+          $('#topGames').append('<img src="'+topGames.top[i].game.box.medium+'" id="'+i+'">');
+          $('#topGames #'+i).click(_topGamesListener(topGames,i));
+        }
+      }
+    }
+
+    window._topGamesListener= function(topGames,i){
+      return function(){
+        window.list.URLRequestGames(topGames.top[i].game.name,true);
+      }
+    }
+
+    window.controlDropdownScroll= function(){
+      $('#topGames').scroll(function(){
+        if ($(this).get(0).scrollWidth){
+          if ($(this).scrollLeft() > (($(this).get(0).scrollWidth-1000)*((topGamesIndex-50)/50))){
+            renderTopGamesDisplay(false);
+          }
+        }
+        console.log($(this).get(0).scrollWidth);
+        //TODO finish
+      });
+    }
+
+}
+module.exports = Dropdown;
+
+},{}],2:[function(require,module,exports){
 //SEARCH FOR GAMES (FROM A PREMADE LIST)
 // https://api.twitch.tv/kraken/streams?game=
 //SEARCH FOR CHANNELS FROM A PREMADE LIST
@@ -11,8 +61,9 @@
 // https://api.twitch.tv/kraken/search/streams?q=Lineage&limit=100&offset=0&type=suggest&live
 //THIS ONE WILL DO PARTIAL QUERIES FOR GAMES
 //https://api.twitch.tv/kraken/search/games?q=counter&limit=100&offset=0&type=suggest&live
+//https://api.twitch.tv/kraken/games/top?limit=&offset=0
 // THIS ONE WILL DO PARTIAL QUERIES AGAINST ALL
-//https://api.twitch.tv/kraken/search/channels?q=Programming
+//https://api.twitch.tv/kraken/search/channels?q=
 
 
 
@@ -23,84 +74,30 @@ $(function(){
 
 	// document.domain=document.domain;	//iframe->document port matching. The Twitch API sets the domain correctly, so no problems there
 
+//INCLUDES
 	(require('./streamUtils.js'))();
 	window.cookies= new (require('./cookies.js'));
 	window.mobile= new (require('./mobile.js'));
 	window.list= new(require('./listManager.js'));
-	window.parseURL= require('./parseURL.js');
+	(require('./URLUtils.js'))();
+	(require('./Dropdown.js'))();
 	window.renderStreams= require('./renderStreams.js');
 	window.cResizer= new(require('./columnResizer.js'));
-//init script
-	(require('./init.js'))();
 
 
 
-
-	window.renderStreamsSortList=function(){
-		for(var i=0;i<4;i++){
-			$('#Stream'+i).text(WatchingStreams[i]);
-		}
-	}
-
-
-
-
-
-	//WE ONLY WANT TO HIT THE TWITCH API EVERY FEW DAYS OR SO TO REFRESH FAVORITES, ELSE THERE WOULD BE TOO MANY HITS
-	//HIT THE API TO REFRESH THE FAVORITES STRING IN LOCAL STORAGE EVERY THREE DAYS. SET THE GLOBAL FavoritesString TO localStorage.FavoritesString
-			//THIS IS ONLY MADE TO BE RUN AT STARTUP TO LOAD THE OLD FavoritesString TO SEE IF IT'S EXPIRED... USE FRefreshSession INSTEAD OF
-			//FRefresh COOKIE TO TRACK VIEWERCOUNT STALENESS
-			//NOTE FRefresh IS FOR CHECKING FOR FAVORITES LIST STALENESS, WHILE FRefreshSession IS TO CHECK FOR VIEWERCOUNT STALENESS ON FRefresh LIST'S MEMBERS (they have different expiry dates)
-	window.refreshFavoritesString= function(force){
-
-		//CHECK THE BROWSER FOR LOCAL STORAGE SUPPORT AND SEE IF COOKIES ARE ENABLED...
-			if(storageEnabled && cookies.CookiesEnabled) {
-				if(force || typeof (localStorage.FavoritesString) == 'undefined' || localStorage.FavoritesString == null || cookies.getCookie('FRefresh') == null || cookies.getCookie('FRefresh') == ''){
-					console.log('refreshed FavoritesString');
-					$.getJSON('https://api.twitch.tv/kraken/users/'+Username+'/follows/channels?limit='+CFavStreamsSearchLimit+'&offset=0&callback=?')
-					.done(function(arr){           //ON SUCCESS
-
-									var stringArray = [];
-								arr.follows.forEach(function(stream){
-									stringArray.push(stream.channel.name);
-										});
-										//SAVE THE FAVORITES STRING INTO LOCAL STORAGE, MAKE A TRACKING COOKIE THAT GIVES IT AN EXPIRY DATE
-										localStorage.setItem("FavoritesString", stringArray.toString());
-										cookies.setCookie("FRefresh", true, 3);
-									  deferred1.resolve(localStorage.FavoritesString);
-														// localStorage.removeItem("lastname");
-								})
-								//ON ERROR
-					.fail(function(){
-								console.log('ATTEMPT TO GET USER\'S FOLLOWED STREAMS FAILED!' );
-								deferred1.resolve('');
-					});
-
-				}
-				else deferred1.resolve(localStorage.FavoritesString);
-			}
-			else {
-			    console.log('Favorites wont work - you need to enable cookies and local storage. You may not have native local storage support in your browser');
-					$('#favStreams').off('click');
-					deferred1.resolve('');
-			}
-
-	}
-
-
-
-
-
-
-
-  //CONFIG VARIABLES
+//CONFIG VARIABLES
 window.CFavStreamsSearchLimit = 400;   //maximum number of followed streams to fetch from the API to inspect for live-ness to populate the favorites list
 window.CHideGame = false;
 window.CHideDesc = true;
 window.CSaveRecentStreams = true;
 
+//URLs
+window.BASE_TWITCH_REQUEST_URL= 'https://api.twitch.tv/kraken/streams?';
+window.TOP_GAMES_REQUEST_URL = 'https://api.twitch.tv/kraken/games/top?limit=50';
 
-  //INITIALIZE
+//INITIALIZE
+window.topGamesIndex=0;
 window.lw=500;
 window.NumStreams=1;  //number of streams being displayed, NOT the number of streams in the watching-list
 window.SelectedStream=0;   //the stream that is "active" to be changed on a list click
@@ -121,8 +118,7 @@ window.deferred1 = $.Deferred();
 window.deferred2 = $.Deferred();
 
 
-
-  //CACHE DOM
+//CACHE DOM
 window.$list = $('#list');
 window.$colList = $('.colList');
 window.$streams = $('.colStreams');
@@ -131,42 +127,29 @@ window.$selectedStreamPopup = window.$streams;    //meaningless; purely for init
 window.$filterList = $('#filterList');
 
 
-	//RUN
 
-//CHOOSE BETWEEN LOADING FROM COOKIES OR USING URL PARAMS (TRIES URL PARAMS FIRST)
-			window.URL='';       //without appended streams or index.html#
-			UrlParams= parseURL();
-if(typeof UrlParams[0] == "undefined" && CookiesEnabled){
-  console.log('No URL params. loading cookies');
-  cookies.getStreamCookies();    //brings back the streams stored in the cookies session and updates the URL to reflect that (but only if a custom URL is not set)
-}
-else{
-	console.log('Using URL to populate streams');
-	WatchingStreams = fillStreamsWithURLParams(UrlParams,WatchingStreams);
-};
-// alert(window.history.length);
+//RUN
 
+//init script
+(require('./init.js'))();
 showStreamsLoadScreen();
-cookies.getLayoutCookies();     //loads layout cookies and does resizing
+cookies.setLayoutFromCookies();     //loads layout cookies and does resizing
 cResizer.setResizableColumns('sample',true,cResizer.ResetStreamColumnDrag);
 addToRecentStreams();   //sets recent streams to the streams you are initially watching
+renderTopGamesDisplay(true);	//THE DROPDOWN MENU
 
-list.populateList(list.DefaultRequestURL,true);
+list.URLRequestTopStreams(window.BASE_TWITCH_REQUEST_URL,true);
 list.controlListScroll();
+controlDropdownScroll();
 
 window.renderStreamsSortList();
 
 (require('./streamListButtonListeners.js'))();
-(require('./closeListener.js'))();  //creates cookies to store layout info for getLayoutCookies and getStreamCookies
+(require('./closeListener.js'))();  //creates cookies to store layout info for setLayoutFromCookies and setStreamsFromCookies
 cResizer.setResizableStreamList();
 (require('./keyListenersSetup.js'))();
+(require('./initFinished.js'))();
 
-$( window ).resize(function() {
-	var $collapseList = $(".collapseList");
-	var $collapseChat = $('.collapseChat');
-	$collapseList.css({top: 0, left: $colList.width(), position:'absolute', 'z-index': 2});
-	$collapseChat.css({top: 0, right: 0, position:'absolute', 'z-index': 2});
-});
 
 });
 
@@ -234,7 +217,68 @@ $( window ).resize(function() {
 	// monitorEvents($0)		//$0 is just the last element in the DOM, can replace with whatever you want
 	// unmonitorEvents($0)
 
-},{"./closeListener.js":2,"./columnResizer.js":3,"./cookies.js":4,"./init.js":5,"./keyListenersSetup.js":6,"./listManager.js":7,"./mobile.js":8,"./parseURL.js":9,"./renderStreams.js":10,"./streamListButtonListeners.js":11,"./streamUtils.js":12}],2:[function(require,module,exports){
+},{"./Dropdown.js":1,"./URLUtils.js":3,"./closeListener.js":4,"./columnResizer.js":5,"./cookies.js":6,"./init.js":7,"./initFinished.js":8,"./keyListenersSetup.js":9,"./listManager.js":10,"./mobile.js":11,"./renderStreams.js":12,"./streamListButtonListeners.js":13,"./streamUtils.js":14}],3:[function(require,module,exports){
+function URLUtils(){
+
+//PARSES THE URL PARAMETERS AND RETURNS EACH OF THEM AS ELEMENTS IN A RETURN ARRAY (query_string)
+    window.parseURL= function() {
+
+      var query_string = [];
+      var query = window.location.href;
+      var pre = query.split(/index\.html#?\/?/);
+      if (!(pre)) pre = query;
+      window.URL=pre[0]+'index.html#/';
+        if(pre[1]) var vars = pre[1].split("/");
+        else var vars='';
+      for (var i=0;i<vars.length;i++) {
+          var temp = decodeURIComponent(vars[i]);
+          if (temp) query_string[i] = temp;   //doesn't terminate at empty entries, ie: / /
+        }
+        return query_string;
+    }
+
+
+
+//CALL THIS AFTER RUNNING parseURL AND PASSING THE RESULTS INTO THIS FUNCTION
+    window.fillStreamsWithURLParams = function (UrlParams, WatchingStreams){
+  	  try{
+  	    if (UrlParams){
+  	      var p=0;
+  	      UrlParams.forEach(function(param){
+  	        console.log(param+ ', ');
+  	        WatchingStreams[p]=param;
+  	        addToRecentStreams();
+  	        if(p>3) throw BreakException;
+  	        ++p;
+  	      })
+  	    }
+  	  }catch(e) {
+  	      alert('Maximum of 4 streams!');
+          return '';
+  	  }finally{
+  	    var length = WatchingStreams.length || 0;
+  	    window.NumStreams=(length==0?1 :length==1?1 :length==2?2 :length==3?4: length==4?4 :4);
+  	   }
+       return WatchingStreams;
+  	  // alert('URL params used to populate streams. URL: ' + URL);
+  	}
+
+//UPDATE THE URL
+    window.updateURL= function(URL,WatchingStreams){
+      var newURL = URL;
+      WatchingStreams.forEach(function(stream){
+      if (stream != 'undefined')
+       newURL += stream + '/';
+      });
+      window.history.replaceState(null, null, newURL);
+    }
+
+}
+
+
+module.exports= URLUtils;
+
+},{}],4:[function(require,module,exports){
 //COOKIES - GET LAYOUT ON CLOSE, GET WATCHING STREAMS
   function createCloseListener(){
       window.onbeforeunload = function(e) {
@@ -264,7 +308,7 @@ $( window ).resize(function() {
 
 module.exports= createCloseListener;
 
-},{}],3:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 //FOR RESIZABLE COLUMN SUPPORT
   //CAN MAKE A SEPARATE RESIZE HANDLERR FOR EACH EMBEDDED RESIZABLE COLUMN SET, MAKING THEM CALL DOWN THE CHAIN RECURSIVELY.
   //THIS WILL REFRESH THE ENTIRE CHAIN DOWNWARDS WHEN A HIGHER LEVEL COLUMN ANCHOR IS MOVED, KEEPING ALL LOWER LEVEL ANCHORS ACCURATE
@@ -333,7 +377,7 @@ class columnResizer {
 
 module.exports= columnResizer;
 
-},{}],4:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 //COOKIE UTILITY FUNCTIONS
 class cookies{
 
@@ -371,7 +415,7 @@ class cookies{
 
 
 //SET LAYOUT
-	getLayoutCookies() {
+	setLayoutFromCookies() {
 
 	      //SIZING WITH COOKIES AND SIZING RESET STUFF - USES PIXELS, SO NOT REALLY FUTURE-PROOF
 	      //WILL FALL BACK TO DEFAULTS IF THE USER BREAKS COLUMN SIZES
@@ -399,7 +443,7 @@ class cookies{
 
 
 //BRING BACK PREVIOUS STREAMS (BUT ONLY IF URL PARAMS ARE NOT SET)
-	getStreamCookies(){
+	setStreamsFromCookies(){
 
 	    var push='index.html#';
 	    for (var i=0;i<4;i++){
@@ -425,7 +469,7 @@ class cookies{
 
 module.exports=cookies;
 
-},{}],5:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 function init(){
 
 // //REDIRECT FOR THE HELP BUTTON
@@ -437,16 +481,6 @@ function init(){
 //CHECK FLASH INSTALLED
 // var Flash_Installed = ((typeof navigator.plugins !== "undefined" && typeof navigator.plugins["Shockwave Flash"] === "object") || (window.ActiveXObject && (new ActiveXObject("ShockwaveFlash.ShockwaveFlash")) !== false));
       window.Flash_Installed = (swfobject.hasFlashPlayerVersion("1")) ? true : false;
-
-
-//CHECK FOR MOBILE... AN (UNSTABLE) ALTERNATIVE TO MEDIA QUERIES
-//matchMedia is relatively new. Theres a modernizr equivalent and a polyfill on github
-      window.isMobile = window.matchMedia("(max-width: 1300px)").matches;
-
-      if (window.isMobile){
-  			$('.fa').addClass('fa-2x');
-  		}
-      //mq.matches as a test (not a function)
 
 //ENLARGE MENU ICONS FOR TOUCHSCREENS
   		window.MobileOrTablet= mobile.mobileOrTablet();
@@ -467,30 +501,10 @@ function init(){
         }
       })();
 
-//GET COOKIES OR URL PARAMS TO SET THE INITIAL STREAMS BEING WATCHED. GET USERNAME
-      window.UrlParams = window.parseURL();
+
 //GET USERNAME
       window.Username = cookies.getCookie('username') || '';
 
-
-//CROSS BROWSER SCROLL PANE CUSTOMISATION
-    	$('.scroll-pane').jScrollPane({
-    		showArrows: true,
-    		arrowScrollOnHover: true,
-    		// horizontalGutter: 30,
-    		// verticalGutter: 30
-    	});
-      // // Add some content to #pane2
-      // var pane2api = $('#pane2').data('jsp');
-      // var originalContent = pane2api.getContentPane().html();
-      // pane2api.getContentPane().html(originalContent + originalContent + originalContent);
-      //
-      // // Reinitialise the #pane2 scrollpane
-      // pane2api.reinitialise();
-
-
-//TOOLTIP INIT FOR BOOTSTRAP
-      $('[data-toggle="tooltip"]').tooltip();
 
 //SET RECENT STREAMS VARIABLE
       window.RecentStreams = [];
@@ -501,6 +515,65 @@ function init(){
       	}
       	else RecentStreams = [];
 
+
+//ADJUSTMENTS FOR MOBILE
+//MEDIA QUERY (CSS SCREEN SIZE) BASED MOBILE DETECTING
+    if (mobile.isMobile()){
+			$('.fa').addClass('fa-2x');
+		}
+
+
+
+
+//CHOOSE BETWEEN LOADING FROM COOKIES OR USING URL PARAMS (TRIES URL PARAMS FIRST)
+    			window.URL='';       //without appended streams or index.html#
+    			window.UrlParams= parseURL();	//GET COOKIES OR URL PARAMS TO SET THE INITIAL STREAMS BEING WATCHED. GET USERNAME
+    if(typeof UrlParams[0] == "undefined" && CookiesEnabled){
+      console.log('No URL params. loading cookies');
+      cookies.setStreamsFromCookies();    //brings back the streams stored in the cookies session and updates the URL to reflect that (but only if a custom URL is not set)
+    }
+    else{
+    	console.log('Using URL to populate streams');
+    	WatchingStreams = fillStreamsWithURLParams(UrlParams,WatchingStreams);
+    };
+    // alert(window.history.length);
+
+}
+
+module.exports= init;
+
+},{}],8:[function(require,module,exports){
+function initFinished(){
+
+//WINDOW RESIZE LISTENERS
+	//KEEPS THE COLLAPSE CARETS PROPERLY ALIGNED ON BROWSER RESIZE
+		$(window).resize(function() {
+			var $collapseList = $(".collapseList");
+			var $collapseChat = $('.collapseChat');
+			if(!ListIsHidden) $collapseList.css({top: 0, left: $colList.width(), position:'absolute', 'z-index': 2});
+			$collapseChat.css({top: 0, right: 0, position:'absolute', 'z-index': 2});
+		});
+
+	//KEEPS THE CARET AND MENU BAR ICONS THE PROPER SIZE ON BROWSER RESIZE
+		$(window).resize(function(){
+			//MAKE TOGGLE ICONS BIGGER FOR SMALLER DEVICES
+			    if (mobile.isMobile()) {
+						$('.fa').addClass('fa-2x');
+			      $('.fa-caret-right').addClass('fa-4x');
+			      $('.fa-caret-left').addClass('fa-4x');
+			    } else {
+						$('.fa').removeClass('fa-2x');
+						$('.fa-caret-left').addClass('fa-2x');
+						$('.fa-caret-right').addClass('fa-2x');
+						$('.fa-caret-right').removeClass('fa-4x');
+			      $('.fa-caret-left').removeClass('fa-4x');
+
+					}
+
+					if(mobile.isPhone()){
+
+					}
+		});
 
 
 //CLICK PROPAGATION
@@ -523,11 +596,30 @@ function init(){
     })
 
 
+//CROSS BROWSER SCROLL PANE CUSTOMISATION
+    	$('.scroll-pane').jScrollPane({
+    		showArrows: true,
+    		arrowScrollOnHover: true,
+    		// horizontalGutter: 30,
+    		// verticalGutter: 30
+    	});
+      // // Add some content to #pane2
+      // var pane2api = $('#pane2').data('jsp');
+      // var originalContent = pane2api.getContentPane().html();
+      // pane2api.getContentPane().html(originalContent + originalContent + originalContent);
+      //
+      // // Reinitialise the #pane2 scrollpane
+      // pane2api.reinitialise();
+
+
+//TOOLTIP INIT FOR BOOTSTRAP
+      $('[data-toggle="tooltip"]').tooltip();
+
 }
 
-module.exports= init;
+module.exports= initFinished;
 
-},{}],6:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 //SETUP KEYBOARD KEYPRESS LISTENERS
 function setupKeyListeners(){
 
@@ -643,13 +735,11 @@ function setupKeyListeners(){
 
 module.exports= setupKeyListeners;
 
-},{}],7:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 class listManager{
 
   //ADD MORE STUFF TO THE LIST WHEN THE SCROLLBAR REACHES THE BOTTOM
   constructor(){
-
-    this.BASE_TWITCH_REQUEST_URL= 'https://api.twitch.tv/kraken/streams?';
 
     this.CListRefreshTimeMinutes
     this.CNumListedStreamsStart = 0;
@@ -672,35 +762,53 @@ class listManager{
     this.NoListLockout = true;
 
     this.List={};
+
+    this.Game = '';
   }
 
 
+  URLRequestGames(game,refreshingList){
+    this.NoListLockout=false;
+
+    this.Game = game;
+
+    if(refreshingList) this.flushNumListedStreams();
+
+      var that= this;
+    $.getJSON('https://api.twitch.tv/kraken/streams?game='+game+'&limit='+this.NumListedStreamsEnd+'&offset='+this.NumListedStreamsStart+'&callback=?', function(result){   //the ? for the callback name signals jQuery that it is a JSONP request and not a JSON request. jQuery registers and calls the callback function automatically.
+        //response data are now in the result variable
+    //  var jsonString = JSON.stringify(result);
+    //  var result = JSON.parse(result);
+    console.log(result);
+     that.listLoader(result, refreshingList, refreshingList, that.NumListedStreamsEnd);
+  });
+}
+
+
 // SETUP OF THE STREAM LIST VIEW WITH CLICK LISTENERS
-  populateList (reqURL, refreshingList){
+  URLRequestTopStreams (reqURL, refreshingList){
       //PREVENTS OTHER LIST EVENTS FROM BEING FIRED SO THAT MULTIPLE SETS OF AJAX REQUESTS DON'T COINCIDE
       this.NoListLockout=false;
 
       if(refreshingList) this.flushNumListedStreams();
 
         var that= this;
-      $.getJSON(this.BASE_TWITCH_REQUEST_URL+'offset='+this.NumListedStreamsStart+'&limit='+this.NumListedStreamsEnd+'&callback=?', function(result){   //the ? for the callback name signals jQuery that it is a JSONP request and not a JSON request. jQuery registers and calls the callback function automatically.
-          //response data are now in the result variable
-      //  var jsonString = JSON.stringify(result);
-      //  var result = JSON.parse(result);
+      $.getJSON(window.BASE_TWITCH_REQUEST_URL+'offset='+this.NumListedStreamsStart+'&limit='+this.NumListedStreamsEnd+'&callback=?', function(result){
+
        that.listLoader(result, refreshingList, refreshingList, that.NumListedStreamsEnd);
       });
     }
 
-//LOAD THE STREAMS LIST ON THE LEFT
-//YOU'RE EITHER REFRESHING THE LIST OR ADDING TO THE LIST
 
-//YOU PASS IN A DIFFERENT LIST EVERY TIME, SO YOU ONLY NEED TO KEEP A STATIC COUNTER TO KEEP THE INDEX POSITION WHILE FILTERING
+//LOAD THE STREAMS LIST ON THE LEFT. YOURE EITHER ADDING TO THE LIST, REFRESHING THE LIST (REWRITING ANEW), OR FILTERING
+  //YOU PASS IN A DIFFERENT LIST EVERY TIME, SO YOU ONLY NEED TO KEEP A STATIC COUNTER TO KEEP THE INDEX POSITION WHILE FILTERING
 //WHEN USING LISTLOADER ON ITS OWN, YOU NEED TO USE flushNumListedStreams() TO CLEAR THE VALUE OF this.NumListedStreamsStart...
-//NOTE listLoader HAS NO TOLERANCE FOR EMPTY LIST ENTRIES (ABORTS FUNCTION ON SIGHT), AND REQUIRES YOU TO KEEP THE
+  //NOTE listLoader HAS NO TOLERANCE FOR EMPTY LIST ENTRIES (ABORTS FUNCTION ON SIGHT), AND REQUIRES YOU TO KEEP THE
 //START AND FINISH LIST PUSH POSITIONS YOURSELF IF YOU ARE MAKING MULTIPLE CALLS TO IT...
-//changingCat IS FOR WHEN YOU CLICK A NEW CATEGORY BUTTON, IT WILL RUN ONCE WITHOUT FILTERING TO POPULATE List, AND THEN ONCE WITH
-//TO RENDER THE LIST PROPERLY FILTERED
-  listLoader(list, refreshingList,changingCat, streamIteratorEnd) {
+  //changingCat IS FOR WHEN YOU CLICK A NEW CATEGORY BUTTON, IT WILL RUN ONCE WITHOUT FILTERING TO POPULATE List, AND THEN ONCE WITH
+//TO RENDER THE LIST PROPERLY FILTERED (SO YOU ONLY NEED TO CALL ONCE EXTERNALY)
+  //streamIteratorEnd DOESNT AUTO-REFERENCE TO THE LIST'S STARTING POINT WHEN YOU RUN. YOU NEED TO MANAGE THIS EXTERNALLY
+  listLoader(list, refreshingList, changingCat, streamIteratorEnd) {
 
         var filtering=false;
         var tempList = list;
@@ -724,18 +832,18 @@ class listManager{
           });
 
 
-        //MODIFY LISTLOADER BEHAVIOR IF REFRESHING OR FILTERING. THESE VARIABLES AFFECT HOW THE PASSED IN list IS ADDED TO
-        //THE $list DOM ELEMENT
-    if (refreshingList){
-      $list.html('');
-      this.FilteringListStaticCounter=0;
-      if(filtering==false || changingCat){
-        this.List = list;
-        this.ListStaticCounter=0;
-      }
-    } else this.List.streams = this.List.streams.concat(list.streams);
+  //MODIFY LISTLOADER BEHAVIOR IF REFRESHING OR FILTERING. THESE VARIABLES AFFECT HOW THE PASSED IN list IS ADDED TO
+  //THE $list DOM ELEMENT
+      if (refreshingList){
+        $list.html('');
+        this.FilteringListStaticCounter=0;
+        if(filtering==false || changingCat){
+          this.List = list;
+          this.ListStaticCounter=0;
+        }
+      } else this.List.streams = this.List.streams.concat(list.streams);
 
-    if (filtering) list = tempList;  //else just use list
+      if (filtering) list = tempList;  //else just use list
 
 
 
@@ -762,24 +870,29 @@ class listManager{
                         '</li>'
                       );
 
-             $('.listHoverClass').hover(
-               function(){$(this).find('.listHidden').show();},
-               function(){if(CHideGame) $(this).find('#gameName').hide();
-                          if(CHideDesc) $(this).find('#gameStatus').hide();
-               }
-             );
+        //SHOW THE HIDDEN STREAM PICTURE OVERLAY STUFF (.listHidden) ON HOVER. ON EXIT HIDE THEM.
+           $('.listHoverClass').hover(
+             function(){$(this).find('.listHidden').show();},
+             function(){if(CHideGame) $(this).find('#gameName').hide();
+                        if(CHideDesc) $(this).find('#gameStatus').hide();
+             }
+           );
+
           $('.listStreamName').css({bottom: 0, position:'absolute', width: '100%'})
 
+       //ONCE THE LIST IS LOADED FOR THE FIRST TIME, LOAD THE FLASH PLAYERS
           if(window.FirstTimeRenderingStreams){
             window.renderStreams();
           }
-              //ADD THE LISTENERS TO RENDER THE STREAMS
-          $('.Pic'+c).click(loadNewStream(list.streams[i-this.NumListedStreamsStart].channel.name));  //RENDERS ALL THE STREAMS
 
+       //THE LISTENERS TO RENDER THE STREAMS ON CLICK
+          $('.Pic'+c).click(loadNewStream(list.streams[i-this.NumListedStreamsStart].channel.name, window.SelectedStream));
+
+      //DONT INCREMENT THE LIST RENDERING POSITION IF THIS WAS A FILTERING PASS, ONLY INCREMENT ON STREAM ADDITION / LIST REFRESH
           if(filtering==false) this.ListStaticCounter++;
           else this.FilteringListStaticCounter++;
-
-          this.NoListLockout=true;   //RELINQUISH LOCK
+      //RELINQUISH LOCK
+          this.NoListLockout=true;
       };
     };
 
@@ -791,24 +904,35 @@ class listManager{
 	}
 
 
-
+//ADDS MORE TO THE LIST IF YOU'VE SCROLLED PAST A CERTAIN POINT IN THE LIST
   controlListScroll(){
 
-              var _this= this;
+      var _this= this;
       $(".colList ul").scroll(function() {
-        if($(document).scrollTop() == 0 && _this.NumListedStreamsEnd<251 && _this.ListAddCooldown==false) {
+        //CHECK FOR LIST SCROLLBAR HEIGHT (A LITTLE BIT TOO TRIGGER-HAPPY ON MOBILE WHERE THE LIST ICONS ARE ENLARGED)
+          var ScrollBottom=false;
+        	if ($(this).scrollTop() - 200 > $(document).height()*_this.NumListedStreamsEnd/25) {
+            ScrollBottom=true;
+          }
+        if(ScrollBottom && _this.NumListedStreamsEnd<251 && _this.ListAddCooldown==false) {
           if ($('#topStreams').hasClass('activeButton')) {
             _this.NumListedStreamsEnd+=25;
             _this.NumListedStreamsStart+=25;
             _this.addToTopStreams(false);
           }
-          if ($('#favStreams').hasClass('activeButton')){
+          else if ($('#favStreams').hasClass('activeButton')){
             _this.addToFavStreams('',false);
           }
-          if ($('#recStreams').hasClass('activeButton')) {
+          else if ($('#recStreams').hasClass('activeButton')) {
             _this.NumListedStreamsEnd+=25;
             _this.NumListedStreamsStart+=25;
             _this.addToRecStreams(false);
+          }
+          //MUST BE SORTING BY TOP GAMES IF NOTHING ELSE
+          else{
+            _this.NumListedStreamsEnd+=25;
+            _this.NumListedStreamsStart+=25;
+            addToTopGameStreams(false);
           }
 
 
@@ -819,7 +943,7 @@ class listManager{
 
           //REFRESH THE LIST EVERY MINUTE
           //TODO BROKEN, NEEDS TO BE CUSTOMIZED TO THE SELECTED LISTBAR ITEM
-    _this.refreshListInterval=setInterval(_this.populateList(_this.BASE_TWITCH_REQUEST_URL,true), _this.CListRefreshTimeMinutes*60000);
+    _this.refreshListInterval=setInterval(_this.URLRequestTopStreams(window.BASE_TWITCH_REQUEST_URL,true), _this.CListRefreshTimeMinutes*60000);
 
     function addListReset(){
       _this.ListAddCooldown=false;
@@ -914,7 +1038,15 @@ class listManager{
   addToTopStreams(refreshing){
     if(this.NoListLockout){
       this.NoListLockout=false;
-        this.populateList(this.BASE_TWITCH_REQUEST_URL, refreshing);
+        this.URLRequestTopStreams(window.BASE_TWITCH_REQUEST_URL, refreshing);
+      this.NoListLockout=true;
+    }
+  }
+
+  addToTopGameStreams(refreshing){
+    if(this.NoListLockout){
+      this.NoListLockout=false;
+        this.URLRequestGames(this.Game, false);
       this.NoListLockout=true;
     }
   }
@@ -978,17 +1110,26 @@ console.log(qString);
 
 module.exports= listManager;
 
-},{}],8:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 class detectMobile{
 
+//CHECK FOR MOBILE USING CSS WIDTH
+	isMobile(){
+		return window.matchMedia("(max-width: 1300px)").matches;
+	}
+
+	isPhone(){
+		return window.matchMedia("(max-width: 800px)").matches;
+	}
+
 //check for mobile based on CSS PIXEL SIZE
-		detectmobBySize() {
-		   if(window.innerWidth <= 800 && window.innerHeight <= 600) {
-		     return true;
-		   } else {
-		     return false;
-		   }
-		}
+	detectMobBySize() {
+	   if(window.innerWidth <= 800 && window.innerHeight <= 600) {
+	     return true;
+	   } else {
+	     return false;
+	   }
+	}
 
 //check for on mobile USING A REALLY BIG RegExp
 	mobile() {
@@ -1032,27 +1173,7 @@ class detectMobile{
 
 module.exports= detectMobile;
 
-},{}],9:[function(require,module,exports){
-//PARSES THE URL PARAMETERS AND RETURNS EACH OF THEM AS ELEMENTS IN A RETURN ARRAY (query_string)
-  function ParseURL () {
-
-    var query_string = [];
-    var query = window.location.href;
-    var pre = query.split(/index\.html#?\/?/);
-    if (!(pre)) pre = query;
-    window.URL=pre[0]+'index.html#/';
-      if(pre[1]) var vars = pre[1].split("/");
-      else var vars='';
-    for (var i=0;i<vars.length;i++) {
-        var temp = decodeURIComponent(vars[i]);
-        if (temp) query_string[i] = temp;   //doesn't terminate at empty entries, ie: / /
-      }
-      return query_string;
-  }
-
-  module.exports= ParseURL;
-
-},{}],10:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
    //RENDERS THE STREAM COLUMN
 function renderStreams(){
     // $collapseList.parent().css({position: 'relative'});   //NEED THIS FOR ABSOLUTE LINK POSITIONING. IFRAME HAS THE SAME PARENT
@@ -1064,12 +1185,12 @@ function renderStreams(){
 
   switch (NumStreams){
     case 1:
-				if (window.Flash_Installed  && !window.isMobile) html = html+'<div id="twitch_embed_player_0"></div>';
-				else html = html+'<span class="stream0" style="width: 100%; height:100%;"><iframe src="http://www.twitch.tv/'+WatchingStreams[0]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe><param name="menu" value="false" /></span>';
+				if (true) html = html+'<div id="twitch_embed_player_0"></div>';
+				else html = html+'<div class="stream0" style="width: 100%;"><iframe src="http://www.twitch.tv/'+WatchingStreams[0]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe><param name="menu" value="false" /></div>';
         break;
     case 2:
        if (DivideStreams=='horizontal'){
-				if (window.Flash_Installed  && !window.isMobile){
+				if (window.Flash_Installed  && !mobile.isMobile()){
 					html = html+'<div style="height: 100%; width: 100%;"><table style="height: 100%; width: 100%;" id="streamTable" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td><div id="twitch_embed_player_0"></div></td>';
 	        html = html+'<td><div id="twitch_embed_player_1"></div></td></tr><tbody></table></div>';
 				}
@@ -1079,7 +1200,7 @@ function renderStreams(){
 				}
        }
        else if (DivideStreams=='vertical'){
-				 if (window.Flash_Installed  && !window.isMobile){
+				 if (window.Flash_Installed  && !mobile.isMobile()){
          html = html+'<div style="height: 100%; width: 100%;"><table style="height: 100%; width: 100%;" id="streamTable" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td><div id="twitch_embed_player_0"></div></td></tr>';
          html = html+'<tr><td><div id="twitch_embed_player_1"></div></td></tr></tbody></table></div>';
        }
@@ -1090,7 +1211,7 @@ function renderStreams(){
 		 }
         break;
     case 4:
-			if(window.Flash_Installed  && !window.isMobile){
+			if(window.Flash_Installed  && !mobile.isMobile()){
         html = html+'<table  style="height: 100%; width: 100%;" id="streamTable" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td><div id="twitch_embed_player_0"></div></td>';
         html = html+'<td><div id="twitch_embed_player_1"></div></td></tr>';
         html = html+'<tr><td><div id="twitch_embed_player_2"></div></td>';
@@ -1109,12 +1230,6 @@ function renderStreams(){
 //ICONS TO TOGGLE SIDE PANEL
     html = html + '<a href="#" class="collapse collapseList" style="display: none;" data-toggle="tooltip" data-placement="bottom" title="Collapse Streams List"><i class="fa fa-2x fa-caret-left"></i></a>'+
                       '<a href="#" class="collapse collapseChat" style="display: none;" data-toggle="tooltip" data-placement="bottom" title="Collapse Chat"><i class="fa fa-2x fa-caret-right"></i></a>';
-
-//MAKE TOGGLE ICONS BIGGER FOR SMALLER DEVICES
-    if (window.isMobile) {
-      $('.fa-caret-right').addClass('fa-4x');
-      $('.fa-caret-left').addClass('fa-4x');
-    }
 
 
 //HIDE STREAMS UNTIL THEY ARE ALL LOADED (NEED THEM IN THE DOM TO CREATE THE LISTENERS FOR WHEN THEY LOAD)
@@ -1323,7 +1438,7 @@ function renderStreams(){
 
 module.exports= renderStreams;
 
-},{}],11:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 function setStreamListButtonListeners(){
 
   //TOP STREAMS
@@ -1501,6 +1616,33 @@ function setStreamListButtonListeners(){
 
 
 
+//STREAM SPLIT SETTING LISTENER FOR THE SELECT IN THE MENU BAR
+  $('#streamSplit').change(function(){
+    if($(this).val() === 'Single') {
+      var e = jQuery.Event("keypress");
+      e.which = 122;
+      $("html").trigger(e);
+    }
+    if($(this).val() === 'DoubleH') {
+      window.DivideStreams='vertical';
+      var e = jQuery.Event("keypress");
+      e.which = 120;
+      $("html").trigger(e);
+    }
+    if($(this).val() === 'DoubleV') {
+      window.DivideStreams='horizontal';
+      var e = jQuery.Event("keypress");
+      e.which = 120;
+      $("html").trigger(e);
+    }
+    if($(this).val() === 'Quad') {
+      var e = jQuery.Event("keypress");
+      e.which = 99;
+      $("html").trigger(e);
+    }
+  });
+
+
 
 
 //CLICK LISTENERS FOR THE STREAM LIST
@@ -1551,53 +1693,28 @@ function setStreamListButtonListeners(){
 
 module.exports= setStreamListButtonListeners;
 
-},{}],12:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 function streamUtils (){
-
-//CALL THIS AFTER RUNNING parseURL AND PASSING THE RESULTS INTO THIS FUNCTION
-  window.fillStreamsWithURLParams = function (UrlParams, WatchingStreams){
-	  try{
-	    if (UrlParams){
-	      var p=0;
-	      UrlParams.forEach(function(param){
-	        console.log(param+ ', ');
-	        WatchingStreams[p]=param;
-	        addToRecentStreams();
-	        if(p>3) throw BreakException;
-	        ++p;
-	      })
-	    }
-	  }catch(e) {
-	      alert('Maximum of 4 streams!');
-        return '';
-	  }finally{
-	    var length = WatchingStreams.length || 0;
-	    window.NumStreams=(length==0?1 :length==1?1 :length==2?2 :length==3?4: length==4?4 :4);
-	   }
-     return WatchingStreams;
-	  // alert('URL params used to populate streams. URL: ' + URL);
-	}
 
 
 //WRITES OVER WATCHINGSTREAMS[] ELEMENT WITH THE INPUT STREAM NAME, CHANGES THE #CHAT TO THE NEWLY SELECTED STREAM, UPDATES THE URL TO REFLECT THE CHANGE
-	window.loadNewStream= function (name){
-	    return function(){WatchingStreams[SelectedStream]=name;
-	                      addToRecentStreams();
-												var ss = SelectedStream;
-												if (NumStreams==1) ss = 0;
+	window.loadNewStream= function (name,SelectedStream){
+	    return function(){
+                WatchingStreams[SelectedStream]=name;
+                addToRecentStreams();
+        				var ss = SelectedStream;
+        				if (NumStreams==1) ss = 0;
 
-												window.changeChat(SelectedStream,name);
+              //CHANGE THE CHAT TO THE NEW STREAM
+        				window.changeChat(SelectedStream,name);
 
-		                      if (Flash_Installed) $("#twitch_embed_player_"+ss)[0].loadStream(name);
-													else $('.stream'+ss).html('<iframe src="http://www.twitch.tv/'+WatchingStreams[c]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe>')
+              //TWITCH API TO LOAD A NEW STREAM
+                if (Flash_Installed) $("#twitch_embed_player_"+ss)[0].loadStream(name);
+      					else $('.stream'+ss).html('<iframe src="http://www.twitch.tv/'+WatchingStreams[c]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe>')
 
-													var newURL = URL;
-											WatchingStreams.forEach(function(stream){
-												if (stream != 'undefined')
-												 newURL += '/' + stream;
-											});
-											window.history.replaceState(null, null, newURL);
-	                     };
+              //UPDATE URL
+                updateURL(window.URL,WatchingStreams);
+              };
 	}
 
 //CHANGE THE SELECTED STREAM'S CHAT (STREAM NUMBER) TO THE CHAT OF THE GIVEN STREAM NAME
@@ -1606,7 +1723,8 @@ function streamUtils (){
   }
 
 
-  //ADDS THE CURRENTLY WATCHING STREAMS TO THE RECENT STREAMS LIST, IF THEY HAVEN'T BEEN ALREADY
+
+//ADDS THE CURRENTLY WATCHING STREAMS TO THE RECENT STREAMS LIST, IF THEY HAVEN'T BEEN ALREADY
 	window.addToRecentStreams= function(){
 	  WatchingStreams.forEach(function(stream){
 	    if(stream!=null && stream!=''){
@@ -1708,9 +1826,69 @@ function streamUtils (){
 	}
 
 
+//WE ONLY WANT TO HIT THE TWITCH API EVERY FEW DAYS OR SO TO REFRESH FAVORITES, ELSE THERE WOULD BE TOO MANY HITS
+//HIT THE API TO REFRESH THE FAVORITES STRING IN LOCAL STORAGE EVERY THREE DAYS. SET THE GLOBAL FavoritesString TO localStorage.FavoritesString
+    //THIS IS ONLY MADE TO BE RUN AT STARTUP TO LOAD THE OLD FavoritesString TO SEE IF IT'S EXPIRED... USE FRefreshSession INSTEAD OF
+    //FRefresh COOKIE TO TRACK VIEWERCOUNT STALENESS
+    //NOTE FRefresh IS FOR CHECKING FOR FAVORITES LIST STALENESS, WHILE FRefreshSession IS TO CHECK FOR VIEWERCOUNT STALENESS ON FRefresh LIST'S MEMBERS (they have different expiry dates)
+  window.refreshFavoritesString= function(force){
+
+    //CHECK THE BROWSER FOR LOCAL STORAGE SUPPORT AND SEE IF COOKIES ARE ENABLED...
+      if(storageEnabled && cookies.CookiesEnabled) {
+        if(force || typeof (localStorage.FavoritesString) == 'undefined' || localStorage.FavoritesString == null || cookies.getCookie('FRefresh') == null || cookies.getCookie('FRefresh') == ''){
+          console.log('refreshed FavoritesString');
+          $.getJSON('https://api.twitch.tv/kraken/users/'+Username+'/follows/channels?limit='+CFavStreamsSearchLimit+'&offset=0&callback=?')
+          .done(function(arr){           //ON SUCCESS
+
+                  var stringArray = [];
+                arr.follows.forEach(function(stream){
+                  stringArray.push(stream.channel.name);
+                    });
+                    //SAVE THE FAVORITES STRING INTO LOCAL STORAGE, MAKE A TRACKING COOKIE THAT GIVES IT AN EXPIRY DATE
+                    localStorage.setItem("FavoritesString", stringArray.toString());
+                    cookies.setCookie("FRefresh", true, 3);
+                    deferred1.resolve(localStorage.FavoritesString);
+                            // localStorage.removeItem("lastname");
+                })
+                //ON ERROR
+          .fail(function(){
+                console.log('ATTEMPT TO GET USER\'S FOLLOWED STREAMS FAILED!' );
+                deferred1.resolve('');
+          });
+
+        }
+        else deferred1.resolve(localStorage.FavoritesString);
+      }
+      else {
+          console.log('Favorites wont work - you need to enable cookies and local storage. You may not have native local storage support in your browser');
+          $('#favStreams').off('click');
+          deferred1.resolve('');
+      }
+
+  }
+
+
+  window.swapStreams= function(i,j){
+    //SWAP STREAMS
+    var temp = WatchingStreams[i];
+    WatchingStreams[i] = WatchingStreams[j];
+    WatchingStreams[j] = WatchingStreams[i];
+
+    //SWAP CHAT
+    changeChat(i,WatchingStreams[j]);
+    changeChat(j,WatchingStreams[i]);
+
+    //SWAP VIEWER COUNT
+    temp = ViewerCount[i];
+    ViewerCount[i] = ViewerCount[j];
+    ViewerCount[j] = ViewerCount[i];
+
+  }
+
+
 
 }
 
 module.exports= streamUtils;
 
-},{}]},{},[1]);
+},{}]},{},[2]);

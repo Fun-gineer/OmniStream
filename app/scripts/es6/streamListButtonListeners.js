@@ -175,6 +175,33 @@ function setStreamListButtonListeners(){
 
 
 
+//STREAM SPLIT SETTING LISTENER FOR THE SELECT IN THE MENU BAR
+  $('#streamSplit').change(function(){
+    if($(this).val() === 'Single') {
+      var e = jQuery.Event("keypress");
+      e.which = 122;
+      $("html").trigger(e);
+    }
+    if($(this).val() === 'DoubleH') {
+      window.DivideStreams='vertical';
+      var e = jQuery.Event("keypress");
+      e.which = 120;
+      $("html").trigger(e);
+    }
+    if($(this).val() === 'DoubleV') {
+      window.DivideStreams='horizontal';
+      var e = jQuery.Event("keypress");
+      e.which = 120;
+      $("html").trigger(e);
+    }
+    if($(this).val() === 'Quad') {
+      var e = jQuery.Event("keypress");
+      e.which = 99;
+      $("html").trigger(e);
+    }
+  });
+
+
 
 
 //CLICK LISTENERS FOR THE STREAM LIST

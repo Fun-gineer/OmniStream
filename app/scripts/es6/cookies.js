@@ -35,7 +35,7 @@ class cookies{
 
 
 //SET LAYOUT
-	getLayoutCookies() {
+	setLayoutFromCookies() {
 
 	      //SIZING WITH COOKIES AND SIZING RESET STUFF - USES PIXELS, SO NOT REALLY FUTURE-PROOF
 	      //WILL FALL BACK TO DEFAULTS IF THE USER BREAKS COLUMN SIZES
@@ -63,7 +63,7 @@ class cookies{
 
 
 //BRING BACK PREVIOUS STREAMS (BUT ONLY IF URL PARAMS ARE NOT SET)
-	getStreamCookies(){
+	setStreamsFromCookies(){
 
 	    var push='index.html#';
 	    for (var i=0;i<4;i++){

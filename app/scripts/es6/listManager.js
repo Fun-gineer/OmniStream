@@ -3,8 +3,6 @@ class listManager{
   //ADD MORE STUFF TO THE LIST WHEN THE SCROLLBAR REACHES THE BOTTOM
   constructor(){
 
-    this.BASE_TWITCH_REQUEST_URL= 'https://api.twitch.tv/kraken/streams?';
-
     this.CListRefreshTimeMinutes
     this.CNumListedStreamsStart = 0;
     this.CNumListedStreamsEnd = 25;
@@ -26,35 +24,53 @@ class listManager{
     this.NoListLockout = true;
 
     this.List={};
+
+    this.Game = '';
   }
 
 
+  URLRequestGames(game,refreshingList){
+    this.NoListLockout=false;
+
+    this.Game = game;
+
+    if(refreshingList) this.flushNumListedStreams();
+
+      var that= this;
+    $.getJSON('https://api.twitch.tv/kraken/streams?game='+game+'&limit='+this.NumListedStreamsEnd+'&offset='+this.NumListedStreamsStart+'&callback=?', function(result){   //the ? for the callback name signals jQuery that it is a JSONP request and not a JSON request. jQuery registers and calls the callback function automatically.
+        //response data are now in the result variable
+    //  var jsonString = JSON.stringify(result);
+    //  var result = JSON.parse(result);
+    console.log(result);
+     that.listLoader(result, refreshingList, refreshingList, that.NumListedStreamsEnd);
+  });
+}
+
+
 // SETUP OF THE STREAM LIST VIEW WITH CLICK LISTENERS
-  populateList (reqURL, refreshingList){
+  URLRequestTopStreams (reqURL, refreshingList){
       //PREVENTS OTHER LIST EVENTS FROM BEING FIRED SO THAT MULTIPLE SETS OF AJAX REQUESTS DON'T COINCIDE
       this.NoListLockout=false;
 
       if(refreshingList) this.flushNumListedStreams();
 
         var that= this;
-      $.getJSON(this.BASE_TWITCH_REQUEST_URL+'offset='+this.NumListedStreamsStart+'&limit='+this.NumListedStreamsEnd+'&callback=?', function(result){   //the ? for the callback name signals jQuery that it is a JSONP request and not a JSON request. jQuery registers and calls the callback function automatically.
-          //response data are now in the result variable
-      //  var jsonString = JSON.stringify(result);
-      //  var result = JSON.parse(result);
+      $.getJSON(window.BASE_TWITCH_REQUEST_URL+'offset='+this.NumListedStreamsStart+'&limit='+this.NumListedStreamsEnd+'&callback=?', function(result){
+
        that.listLoader(result, refreshingList, refreshingList, that.NumListedStreamsEnd);
       });
     }
 
-//LOAD THE STREAMS LIST ON THE LEFT
-//YOU'RE EITHER REFRESHING THE LIST OR ADDING TO THE LIST
 
-//YOU PASS IN A DIFFERENT LIST EVERY TIME, SO YOU ONLY NEED TO KEEP A STATIC COUNTER TO KEEP THE INDEX POSITION WHILE FILTERING
+//LOAD THE STREAMS LIST ON THE LEFT. YOURE EITHER ADDING TO THE LIST, REFRESHING THE LIST (REWRITING ANEW), OR FILTERING
+  //YOU PASS IN A DIFFERENT LIST EVERY TIME, SO YOU ONLY NEED TO KEEP A STATIC COUNTER TO KEEP THE INDEX POSITION WHILE FILTERING
 //WHEN USING LISTLOADER ON ITS OWN, YOU NEED TO USE flushNumListedStreams() TO CLEAR THE VALUE OF this.NumListedStreamsStart...
-//NOTE listLoader HAS NO TOLERANCE FOR EMPTY LIST ENTRIES (ABORTS FUNCTION ON SIGHT), AND REQUIRES YOU TO KEEP THE
+  //NOTE listLoader HAS NO TOLERANCE FOR EMPTY LIST ENTRIES (ABORTS FUNCTION ON SIGHT), AND REQUIRES YOU TO KEEP THE
 //START AND FINISH LIST PUSH POSITIONS YOURSELF IF YOU ARE MAKING MULTIPLE CALLS TO IT...
-//changingCat IS FOR WHEN YOU CLICK A NEW CATEGORY BUTTON, IT WILL RUN ONCE WITHOUT FILTERING TO POPULATE List, AND THEN ONCE WITH
-//TO RENDER THE LIST PROPERLY FILTERED
-  listLoader(list, refreshingList,changingCat, streamIteratorEnd) {
+  //changingCat IS FOR WHEN YOU CLICK A NEW CATEGORY BUTTON, IT WILL RUN ONCE WITHOUT FILTERING TO POPULATE List, AND THEN ONCE WITH
+//TO RENDER THE LIST PROPERLY FILTERED (SO YOU ONLY NEED TO CALL ONCE EXTERNALY)
+  //streamIteratorEnd DOESNT AUTO-REFERENCE TO THE LIST'S STARTING POINT WHEN YOU RUN. YOU NEED TO MANAGE THIS EXTERNALLY
+  listLoader(list, refreshingList, changingCat, streamIteratorEnd) {
 
         var filtering=false;
         var tempList = list;
@@ -78,18 +94,18 @@ class listManager{
           });
 
 
-        //MODIFY LISTLOADER BEHAVIOR IF REFRESHING OR FILTERING. THESE VARIABLES AFFECT HOW THE PASSED IN list IS ADDED TO
-        //THE $list DOM ELEMENT
-    if (refreshingList){
-      $list.html('');
-      this.FilteringListStaticCounter=0;
-      if(filtering==false || changingCat){
-        this.List = list;
-        this.ListStaticCounter=0;
-      }
-    } else this.List.streams = this.List.streams.concat(list.streams);
+  //MODIFY LISTLOADER BEHAVIOR IF REFRESHING OR FILTERING. THESE VARIABLES AFFECT HOW THE PASSED IN list IS ADDED TO
+  //THE $list DOM ELEMENT
+      if (refreshingList){
+        $list.html('');
+        this.FilteringListStaticCounter=0;
+        if(filtering==false || changingCat){
+          this.List = list;
+          this.ListStaticCounter=0;
+        }
+      } else this.List.streams = this.List.streams.concat(list.streams);
 
-    if (filtering) list = tempList;  //else just use list
+      if (filtering) list = tempList;  //else just use list
 
 
 
@@ -116,24 +132,29 @@ class listManager{
                         '</li>'
                       );
 
-             $('.listHoverClass').hover(
-               function(){$(this).find('.listHidden').show();},
-               function(){if(CHideGame) $(this).find('#gameName').hide();
-                          if(CHideDesc) $(this).find('#gameStatus').hide();
-               }
-             );
+        //SHOW THE HIDDEN STREAM PICTURE OVERLAY STUFF (.listHidden) ON HOVER. ON EXIT HIDE THEM.
+           $('.listHoverClass').hover(
+             function(){$(this).find('.listHidden').show();},
+             function(){if(CHideGame) $(this).find('#gameName').hide();
+                        if(CHideDesc) $(this).find('#gameStatus').hide();
+             }
+           );
+
           $('.listStreamName').css({bottom: 0, position:'absolute', width: '100%'})
 
+       //ONCE THE LIST IS LOADED FOR THE FIRST TIME, LOAD THE FLASH PLAYERS
           if(window.FirstTimeRenderingStreams){
             window.renderStreams();
           }
-              //ADD THE LISTENERS TO RENDER THE STREAMS
-          $('.Pic'+c).click(loadNewStream(list.streams[i-this.NumListedStreamsStart].channel.name));  //RENDERS ALL THE STREAMS
 
+       //THE LISTENERS TO RENDER THE STREAMS ON CLICK
+          $('.Pic'+c).click(loadNewStream(list.streams[i-this.NumListedStreamsStart].channel.name, window.SelectedStream));
+
+      //DONT INCREMENT THE LIST RENDERING POSITION IF THIS WAS A FILTERING PASS, ONLY INCREMENT ON STREAM ADDITION / LIST REFRESH
           if(filtering==false) this.ListStaticCounter++;
           else this.FilteringListStaticCounter++;
-
-          this.NoListLockout=true;   //RELINQUISH LOCK
+      //RELINQUISH LOCK
+          this.NoListLockout=true;
       };
     };
 
@@ -145,24 +166,35 @@ class listManager{
 	}
 
 
-
+//ADDS MORE TO THE LIST IF YOU'VE SCROLLED PAST A CERTAIN POINT IN THE LIST
   controlListScroll(){
 
-              var _this= this;
+      var _this= this;
       $(".colList ul").scroll(function() {
-        if($(document).scrollTop() == 0 && _this.NumListedStreamsEnd<251 && _this.ListAddCooldown==false) {
+        //CHECK FOR LIST SCROLLBAR HEIGHT (A LITTLE BIT TOO TRIGGER-HAPPY ON MOBILE WHERE THE LIST ICONS ARE ENLARGED)
+          var ScrollBottom=false;
+        	if ($(this).scrollTop() - 200 > $(document).height()*_this.NumListedStreamsEnd/25) {
+            ScrollBottom=true;
+          }
+        if(ScrollBottom && _this.NumListedStreamsEnd<251 && _this.ListAddCooldown==false) {
           if ($('#topStreams').hasClass('activeButton')) {
             _this.NumListedStreamsEnd+=25;
             _this.NumListedStreamsStart+=25;
             _this.addToTopStreams(false);
           }
-          if ($('#favStreams').hasClass('activeButton')){
+          else if ($('#favStreams').hasClass('activeButton')){
             _this.addToFavStreams('',false);
           }
-          if ($('#recStreams').hasClass('activeButton')) {
+          else if ($('#recStreams').hasClass('activeButton')) {
             _this.NumListedStreamsEnd+=25;
             _this.NumListedStreamsStart+=25;
             _this.addToRecStreams(false);
+          }
+          //MUST BE SORTING BY TOP GAMES IF NOTHING ELSE
+          else{
+            _this.NumListedStreamsEnd+=25;
+            _this.NumListedStreamsStart+=25;
+            addToTopGameStreams(false);
           }
 
 
@@ -173,7 +205,7 @@ class listManager{
 
           //REFRESH THE LIST EVERY MINUTE
           //TODO BROKEN, NEEDS TO BE CUSTOMIZED TO THE SELECTED LISTBAR ITEM
-    _this.refreshListInterval=setInterval(_this.populateList(_this.BASE_TWITCH_REQUEST_URL,true), _this.CListRefreshTimeMinutes*60000);
+    _this.refreshListInterval=setInterval(_this.URLRequestTopStreams(window.BASE_TWITCH_REQUEST_URL,true), _this.CListRefreshTimeMinutes*60000);
 
     function addListReset(){
       _this.ListAddCooldown=false;
@@ -268,7 +300,15 @@ class listManager{
   addToTopStreams(refreshing){
     if(this.NoListLockout){
       this.NoListLockout=false;
-        this.populateList(this.BASE_TWITCH_REQUEST_URL, refreshing);
+        this.URLRequestTopStreams(window.BASE_TWITCH_REQUEST_URL, refreshing);
+      this.NoListLockout=true;
+    }
+  }
+
+  addToTopGameStreams(refreshing){
+    if(this.NoListLockout){
+      this.NoListLockout=false;
+        this.URLRequestGames(this.Game, false);
       this.NoListLockout=true;
     }
   }

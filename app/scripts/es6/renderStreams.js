@@ -9,12 +9,12 @@ function renderStreams(){
 
   switch (NumStreams){
     case 1:
-				if (window.Flash_Installed  && !window.isMobile) html = html+'<div id="twitch_embed_player_0"></div>';
-				else html = html+'<span class="stream0" style="width: 100%; height:100%;"><iframe src="http://www.twitch.tv/'+WatchingStreams[0]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe><param name="menu" value="false" /></span>';
+				if (true) html = html+'<div id="twitch_embed_player_0"></div>';
+				else html = html+'<div class="stream0" style="width: 100%;"><iframe src="http://www.twitch.tv/'+WatchingStreams[0]+'/embed" frameborder="0" scrolling="no" height="100%" width="100%"></iframe><param name="menu" value="false" /></div>';
         break;
     case 2:
        if (DivideStreams=='horizontal'){
-				if (window.Flash_Installed  && !window.isMobile){
+				if (window.Flash_Installed  && !mobile.isMobile()){
 					html = html+'<div style="height: 100%; width: 100%;"><table style="height: 100%; width: 100%;" id="streamTable" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td><div id="twitch_embed_player_0"></div></td>';
 	        html = html+'<td><div id="twitch_embed_player_1"></div></td></tr><tbody></table></div>';
 				}
@@ -24,7 +24,7 @@ function renderStreams(){
 				}
        }
        else if (DivideStreams=='vertical'){
-				 if (window.Flash_Installed  && !window.isMobile){
+				 if (window.Flash_Installed  && !mobile.isMobile()){
          html = html+'<div style="height: 100%; width: 100%;"><table style="height: 100%; width: 100%;" id="streamTable" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td><div id="twitch_embed_player_0"></div></td></tr>';
          html = html+'<tr><td><div id="twitch_embed_player_1"></div></td></tr></tbody></table></div>';
        }
@@ -35,7 +35,7 @@ function renderStreams(){
 		 }
         break;
     case 4:
-			if(window.Flash_Installed  && !window.isMobile){
+			if(window.Flash_Installed  && !mobile.isMobile()){
         html = html+'<table  style="height: 100%; width: 100%;" id="streamTable" border="0" cellpadding="0" cellspacing="0"><tbody><tr><td><div id="twitch_embed_player_0"></div></td>';
         html = html+'<td><div id="twitch_embed_player_1"></div></td></tr>';
         html = html+'<tr><td><div id="twitch_embed_player_2"></div></td>';
@@ -54,12 +54,6 @@ function renderStreams(){
 //ICONS TO TOGGLE SIDE PANEL
     html = html + '<a href="#" class="collapse collapseList" style="display: none;" data-toggle="tooltip" data-placement="bottom" title="Collapse Streams List"><i class="fa fa-2x fa-caret-left"></i></a>'+
                       '<a href="#" class="collapse collapseChat" style="display: none;" data-toggle="tooltip" data-placement="bottom" title="Collapse Chat"><i class="fa fa-2x fa-caret-right"></i></a>';
-
-//MAKE TOGGLE ICONS BIGGER FOR SMALLER DEVICES
-    if (window.isMobile) {
-      $('.fa-caret-right').addClass('fa-4x');
-      $('.fa-caret-left').addClass('fa-4x');
-    }
 
 
 //HIDE STREAMS UNTIL THEY ARE ALL LOADED (NEED THEM IN THE DOM TO CREATE THE LISTENERS FOR WHEN THEY LOAD)

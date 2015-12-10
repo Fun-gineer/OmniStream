@@ -10,16 +10,6 @@ function init(){
 // var Flash_Installed = ((typeof navigator.plugins !== "undefined" && typeof navigator.plugins["Shockwave Flash"] === "object") || (window.ActiveXObject && (new ActiveXObject("ShockwaveFlash.ShockwaveFlash")) !== false));
       window.Flash_Installed = (swfobject.hasFlashPlayerVersion("1")) ? true : false;
 
-
-//CHECK FOR MOBILE... AN (UNSTABLE) ALTERNATIVE TO MEDIA QUERIES
-//matchMedia is relatively new. Theres a modernizr equivalent and a polyfill on github
-      window.isMobile = window.matchMedia("(max-width: 1300px)").matches;
-
-      if (window.isMobile){
-  			$('.fa').addClass('fa-2x');
-  		}
-      //mq.matches as a test (not a function)
-
 //ENLARGE MENU ICONS FOR TOUCHSCREENS
   		window.MobileOrTablet= mobile.mobileOrTablet();
 
@@ -39,30 +29,10 @@ function init(){
         }
       })();
 
-//GET COOKIES OR URL PARAMS TO SET THE INITIAL STREAMS BEING WATCHED. GET USERNAME
-      window.UrlParams = window.parseURL();
+
 //GET USERNAME
       window.Username = cookies.getCookie('username') || '';
 
-
-//CROSS BROWSER SCROLL PANE CUSTOMISATION
-    	$('.scroll-pane').jScrollPane({
-    		showArrows: true,
-    		arrowScrollOnHover: true,
-    		// horizontalGutter: 30,
-    		// verticalGutter: 30
-    	});
-      // // Add some content to #pane2
-      // var pane2api = $('#pane2').data('jsp');
-      // var originalContent = pane2api.getContentPane().html();
-      // pane2api.getContentPane().html(originalContent + originalContent + originalContent);
-      //
-      // // Reinitialise the #pane2 scrollpane
-      // pane2api.reinitialise();
-
-
-//TOOLTIP INIT FOR BOOTSTRAP
-      $('[data-toggle="tooltip"]').tooltip();
 
 //SET RECENT STREAMS VARIABLE
       window.RecentStreams = [];
@@ -74,26 +44,27 @@ function init(){
       	else RecentStreams = [];
 
 
+//ADJUSTMENTS FOR MOBILE
+//MEDIA QUERY (CSS SCREEN SIZE) BASED MOBILE DETECTING
+    if (mobile.isMobile()){
+			$('.fa').addClass('fa-2x');
+		}
 
-//CLICK PROPAGATION
-    //filter and settings windows won't close when you click the buttons
-    $(".toggleableFilter").click(function(e) {
-    		 e.stopPropagation();
-    });
-    $(".toggleableSetting").click(function(e) {
-    		e.stopPropagation();
-    });
-      //filter and settings windows won't close when you type input into the inputs
-    $('#game').keypress(function(e){
-    	e.stopPropagation();
-    })
-    $('#streamer').keypress(function(e){
-    	e.stopPropagation();
-    })
-    $('#Username').keypress(function(e){
-    	e.stopPropagation();
-    })
 
+
+
+//CHOOSE BETWEEN LOADING FROM COOKIES OR USING URL PARAMS (TRIES URL PARAMS FIRST)
+    			window.URL='';       //without appended streams or index.html#
+    			window.UrlParams= parseURL();	//GET COOKIES OR URL PARAMS TO SET THE INITIAL STREAMS BEING WATCHED. GET USERNAME
+    if(typeof UrlParams[0] == "undefined" && CookiesEnabled){
+      console.log('No URL params. loading cookies');
+      cookies.setStreamsFromCookies();    //brings back the streams stored in the cookies session and updates the URL to reflect that (but only if a custom URL is not set)
+    }
+    else{
+    	console.log('Using URL to populate streams');
+    	WatchingStreams = fillStreamsWithURLParams(UrlParams,WatchingStreams);
+    };
+    // alert(window.history.length);
 
 }
 

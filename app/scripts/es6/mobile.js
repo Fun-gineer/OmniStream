@@ -1,13 +1,22 @@
 class detectMobile{
 
+//CHECK FOR MOBILE USING CSS WIDTH
+	isMobile(){
+		return window.matchMedia("(max-width: 1300px)").matches;
+	}
+
+	isPhone(){
+		return window.matchMedia("(max-width: 800px)").matches;
+	}
+
 //check for mobile based on CSS PIXEL SIZE
-		detectmobBySize() {
-		   if(window.innerWidth <= 800 && window.innerHeight <= 600) {
-		     return true;
-		   } else {
-		     return false;
-		   }
-		}
+	detectMobBySize() {
+	   if(window.innerWidth <= 800 && window.innerHeight <= 600) {
+	     return true;
+	   } else {
+	     return false;
+	   }
+	}
 
 //check for on mobile USING A REALLY BIG RegExp
 	mobile() {

@@ -1,6 +1,8 @@
 * {
   margin: 0;
   padding: 0;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
   -ms-box-sizing: border-box;
   -o-box-sizing: border-box;
   box-sizing: border-box;
@@ -90,7 +92,11 @@ span {
   height: 40vh;
   z-index: 6;
   overflow: hidden;
+  background-color: #aaaaaa;
   /*pointer-events: none;*/ }
+  .dropdown-menu#filterList {
+    width: 60vw;
+    height: 41vh; }
 
 .modal-content {
   width: 50vw;
@@ -212,6 +218,10 @@ img {
   max-height: 100%;
   /*min-width: 20%;
 	max-width: 40%;*/ }
+
+#topGames {
+  overflow-x: auto;
+  overflow-y: hidden; }
 
 .streamPic {
   /*max-width:100%;
